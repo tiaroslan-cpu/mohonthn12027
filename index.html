@@ -75,20 +75,14 @@
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
-    .active-tab {
-      background: #0f172a !important;
-      color: white !important;
-      box-shadow: 0 8px 15px -3px rgba(15, 23, 42, 0.2);
-    }
-
-    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
-    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-
     .active-tab-btn {
       background: #0f172a;
       color: white;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
     }
+
+    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 
     @media print {
       body { background: white !important; -webkit-print-color-adjust: exact; padding: 0; margin: 0; }
@@ -98,7 +92,7 @@
       .overflow-x-auto, .overflow-hidden { overflow: visible !important; }
       table { width: 100%; border-collapse: collapse; font-size: 10pt; }
       th, td { border: 1px solid #000 !important; padding: 8px !important; text-align: center; }
-      .chart-container { display: none !important; }
+      .action-col { display: none !important; }
     }
   </style>
 </head>
@@ -106,7 +100,7 @@
   <div id="root">
     <div style="text-align: center; padding-top: 150px;">
       <div class="loader"></div>
-      <p style="color: #64748b; font-size: 15px; font-weight: 700; letter-spacing: 0.05em; font-family: 'Plus Jakarta Sans', sans-serif;">MENYEDIAKAN ANALISIS TAHUN 1...</p>
+      <p style="color: #64748b; font-size: 15px; font-weight: 700; letter-spacing: 0.05em; font-family: 'Plus Jakarta Sans', sans-serif;">MENYEDIAKAN ANALISIS SARAWAK...</p>
     </div>
   </div>
 
@@ -174,7 +168,9 @@
         Trash2: (p) => <Icon path="M3 6h18 M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2 M10 11v6 M14 11v6" {...p} />,
         Info: (p) => <Icon path="M12 16h.01M12 12h.01M12 8h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" {...p} />,
         XCircle: (p) => <Icon path="M12 22a10 10 0 1 0 0-20 10 10 0 0 0 0 20z M15 9l-6 6 M9 9l6 6" {...p} />,
-        Copy: (p) => <Icon path="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" {...p} />
+        ShieldAlert: (p) => <Icon path="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z M12 8v4 M12 16h.01" {...p} />,
+        Copy: (p) => <Icon path="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" {...p} />,
+        AlertTriangle: (p) => <Icon path="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z M12 9v4 M12 17h.01" {...p} />
       };
 
       const StatCard = ({ title, value, icon: IconComponent, colorClass }) => (
@@ -192,7 +188,7 @@
       const Toast = ({ message, type, onClose }) => {
         useEffect(() => { const timer = setTimeout(onClose, 5000); return () => clearTimeout(timer); }, [onClose]);
         return (
-          <div className="fixed top-6 right-6 z-[100] animate-fade-in font-['Plus Jakarta Sans'] no-print">
+          <div className="fixed top-6 right-6 z-[200] animate-fade-in font-['Plus Jakarta Sans'] no-print">
             <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 ${type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'}`}>
               <span className="text-sm font-bold tracking-tight text-center">{message}</span>
             </div>
@@ -200,15 +196,40 @@
         );
       };
 
+      const ConfirmModal = ({ show, title, message, onConfirm, onCancel, confirmText = "Sahkan", type = "danger" }) => {
+        if (!show) return null;
+        return (
+          <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in no-print">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-8 text-center space-y-6">
+              <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${type === 'danger' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
+                {type === 'danger' ? <Icons.Trash2 className="w-8 h-8"/> : <Icons.AlertTriangle className="w-8 h-8"/>}
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{title}</h3>
+                <p className="text-sm text-slate-500 font-bold leading-relaxed">{message}</p>
+              </div>
+              <div className="flex gap-3">
+                <button onClick={onCancel} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Batal</button>
+                <button onClick={onConfirm} className={`flex-1 py-3 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 'bg-slate-900 hover:bg-black shadow-slate-200'}`}>{confirmText}</button>
+              </div>
+            </div>
+          </div>
+        );
+      };
+
       const App = () => {
-        const [data, setData] = useState([]);
+        const [data, setData] = useState([]); 
         const [loading, setLoading] = useState(true);
         const [activeTab, setActiveTab] = useState('dashboard');
         const [searchQuery, setSearchQuery] = useState(''); 
         const [manualPPD, setManualPPD] = useState('');
         const [user, setUser] = useState(null);
         const [toast, setToast] = useState(null);
-        const [showPrintModal, setShowPrintModal] = useState(false);
+        
+        // Modal states
+        const [deleteConfirm, setDeleteConfirm] = useState({ show: false, ppd: null });
+        const [resetConfirm, setResetConfirm] = useState(false);
+        const [cleanupConfirm, setCleanupConfirm] = useState(false);
 
         useEffect(() => {
           let isMounted = true;
@@ -224,7 +245,6 @@
                   snapshot.forEach(doc => {
                     const docData = doc.data();
                     if (docData) {
-                      // Sokong kedua-dua format: legasi (rows array) dan individu (single object)
                       if (docData.rows && Array.isArray(docData.rows)) {
                         combinedRows.push(...docData.rows);
                       } else {
@@ -248,16 +268,13 @@
           data.forEach(r => {
              if (r && (r.icClean || r.icFormatted || r.icRaw)) {
                const key = String(r.icClean || r.icFormatted || r.icRaw).replace(/[^0-9]/g, '');
-               
                if (key && !seen.has(key)) {
                  seen.add(key);
-
                  let jantinaClean = 'Perempuan'; 
                  if (key.length >= 12) {
                      const digitJantina = parseInt(key.substring(11, 12), 10);
                      if (!isNaN(digitJantina)) jantinaClean = (digitJantina % 2 !== 0) ? 'Lelaki' : 'Perempuan';
                  }
-
                  let cohortClean = COHORT_NAMES.LUAR;
                  if (key.length >= 6) {
                      const yy = parseInt(key.substring(0, 2), 10), mm = parseInt(key.substring(2, 4), 10), dd = parseInt(key.substring(4, 6), 10);
@@ -268,17 +285,9 @@
                         else if (dobInt >= COHORT_RANGES_INT.C6.start && dobInt <= COHORT_RANGES_INT.C6.end) cohortClean = COHORT_NAMES.C6;
                      }
                  }
-
                  let ppdName = r.ppd || 'SARAWAK';
                  ppdName = ppdName.toUpperCase().replace(/^PPD\s+/i, '').trim();
-
-                 merged.push({ 
-                    ...r, 
-                    icClean: key, 
-                    jantina: jantinaClean,
-                    kohort: cohortClean,
-                    ppd: ppdName
-                 });
+                 merged.push({ ...r, icClean: key, jantina: jantinaClean, kohort: cohortClean, ppd: ppdName });
                }
              }
           });
@@ -287,46 +296,33 @@
 
         const stats = useMemo(() => {
           const pool = allDataUnique;
-          const defaultCohort = {
-            c7_m: 0, c7_p: 0, c7_total: 0,
-            c6_m: 0, c6_p: 0, c6_total: 0,
-            total_m: 0, total_p: 0, grand_total: 0
-          };
-
-          if(!pool.length) return { 
-            total: 0, cohortGenderData: [], genderData: [], ppdList: [], cohortValues: defaultCohort
-          };
+          const defaultCohort = { c7_m: 0, c7_p: 0, c7_total: 0, c6_m: 0, c6_p: 0, c6_total: 0, total_m: 0, total_p: 0, grand_total: 0 };
+          if(!pool.length) return { total: 0, genderData: [], ppdList: [], cohortValues: defaultCohort };
 
           const c7 = pool.filter(d => d.kohort === COHORT_NAMES.C7);
           const c6 = pool.filter(d => d.kohort === COHORT_NAMES.C6);
-
           const c7_m = c7.filter(d => d.jantina === 'Lelaki').length;
           const c7_p = c7.filter(d => d.jantina === 'Perempuan').length;
           const c6_m = c6.filter(d => d.jantina === 'Lelaki').length;
           const c6_p = c6.filter(d => d.jantina === 'Perempuan').length;
-
           const male = pool.filter(d => d.jantina === 'Lelaki').length;
           const female = pool.filter(d => d.jantina === 'Perempuan').length;
 
-          const ppdMap = pool.reduce((acc, r) => {
-            const p = r.ppd || 'SARAWAK';
-            if (!acc[p]) acc[p] = { name: p, total: 0, c7_l: 0, c7_p: 0, c6_l: 0, c6_p: 0 };
-            acc[p].total++;
+          const ppdGroups = {};
+          pool.forEach(r => {
+            const p = r.ppd || 'TIADA MAKLUMAT';
+            if (!ppdGroups[p]) ppdGroups[p] = { name: p, total: 0, c7_l: 0, c7_p: 0, c6_l: 0, c6_p: 0 };
+            ppdGroups[p].total++;
             const isM = r.jantina === 'Lelaki';
-            if (r.kohort === COHORT_NAMES.C7) { if (isM) acc[p].c7_l++; else acc[p].c7_p++; }
-            else if (r.kohort === COHORT_NAMES.C6) { if (isM) acc[p].c6_l++; else acc[p].c6_p++; }
-            return acc;
-          }, {});
+            if (r.kohort === COHORT_NAMES.C7) { if (isM) ppdGroups[p].c7_l++; else ppdGroups[p].c7_p++; }
+            else if (r.kohort === COHORT_NAMES.C6) { if (isM) ppdGroups[p].c6_l++; else ppdGroups[p].c6_p++; }
+          });
 
           return {
             total: pool.length,
-            cohortValues: {
-                c7_m, c7_p, c7_total: c7_m + c7_p,
-                c6_m, c6_p, c6_total: c6_m + c6_p,
-                total_m: male, total_p: female, grand_total: pool.length
-            },
+            cohortValues: { c7_m, c7_p, c7_total: c7_m + c7_p, c6_m, c6_p, c6_total: c6_m + c6_p, total_m: male, total_p: female, grand_total: pool.length },
             genderData: [{ name: 'Lelaki', value: male, color: THEME.male }, { name: 'Perempuan', value: female, color: THEME.female }],
-            ppdList: Object.values(ppdMap).sort((a,b) => b.total - a.total)
+            ppdList: Object.values(ppdGroups).sort((a,b) => b.total - a.total)
           };
         }, [allDataUnique]);
 
@@ -336,73 +332,67 @@
             return stats.ppdList.filter(p => p.name.toLowerCase().includes(q));
         }, [stats.ppdList, searchQuery]);
 
-        const uploadedPPDs = new Set(allDataUnique.map(d => d.ppd));
-        const sudahMuatNaik = PPD_LIST.filter(p => uploadedPPDs.has(p));
-        const belumMuatNaik = PPD_LIST.filter(p => !uploadedPPDs.has(p));
+        const uploadedPPDs = useMemo(() => new Set(allDataUnique.map(d => d.ppd)), [allDataUnique]);
+        const sudahMuatNaik = useMemo(() => PPD_LIST.filter(p => uploadedPPDs.has(p)), [uploadedPPDs]);
+        const belumMuatNaik = useMemo(() => PPD_LIST.filter(p => !uploadedPPDs.has(p)), [uploadedPPDs]);
+
+        const handleCleanupData = async () => {
+          setLoading(true);
+          try {
+             const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
+             const snapshot = await colRef.get();
+             const batch = db.batch();
+             let count = 0;
+             snapshot.forEach(doc => {
+                if (doc.id !== 'master' && !PPD_LIST.includes(doc.data()?.ppd)) { batch.delete(doc.ref); count++; }
+             });
+             if (count > 0) { await batch.commit(); setToast({ message: `Berjaya membersihkan ${count} rekod tidak sah.`, type: 'success' }); }
+             else { setToast({ message: "Tiada data tidak sah dikesan.", type: 'success' }); }
+          } catch(e) { setToast({ message: "Ralat pembersihan data.", type: 'error' }); }
+          setLoading(false); setCleanupConfirm(false);
+        };
 
         const handleProcessData = async (input, isExcel) => {
+          if (!manualPPD) { setToast({ message: "Sila pilih daerah PPD terlebih dahulu!", type: 'error' }); return; }
           setLoading(true);
           try {
             const rawRows = isExcel ? input : parseDataInputCSV(input);
             const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
-            
             const existingIcs = new Set(allDataUnique.map(d => d.icClean));
-            let added = 0;
-            let rowsToUpload = [];
+            let added = 0; let rowsToUpload = [];
 
             rawRows.forEach((r) => {
-                let icRaw, name, ppd;
+                let icRaw, name;
                 for(let key in r) {
-                    const k = key.toUpperCase().replace(/[^A-Z]/g,''); 
+                    const k = key.toUpperCase().replace(/[^A-Z0-9]/g,''); 
                     if (!icRaw && (k.includes('IC') || k.includes('MYKID') || k.includes('PENGENALAN'))) icRaw = r[key];
                     if (!name && (k.includes('NAMAMURID') || k === 'NAMA')) name = r[key];
-                    if (!ppd && (k.includes('PPD') || k.includes('DAERAH'))) ppd = r[key];
                 }
-                
                 if (!icRaw) return;
                 const icClean = String(icRaw).replace(/[^0-9]/g, '');
                 if (icClean.length < 6 || existingIcs.has(icClean)) return;
 
                 const yy = parseInt(icClean.substring(0, 2), 10), mm = parseInt(icClean.substring(2, 4), 10), dd = parseInt(icClean.substring(4, 6), 10);
                 const fullYear = yy >= 0 && yy <= 30 ? 2000 + yy : 1900 + yy;
-                const dobInt = parseInt(`${fullYear}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`);
-                
                 let coh = COHORT_NAMES.LUAR;
+                const dobInt = parseInt(`${fullYear}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`);
                 if (dobInt >= COHORT_RANGES_INT.C7.start && dobInt <= COHORT_RANGES_INT.C7.end) coh = COHORT_NAMES.C7;
                 else if (dobInt >= COHORT_RANGES_INT.C6.start && dobInt <= COHORT_RANGES_INT.C6.end) coh = COHORT_NAMES.C6;
 
                 const gen = parseInt(icClean.substring(11, 12), 10) % 2 !== 0 ? 'Lelaki' : 'Perempuan';
-                let ppdName = (manualPPD || ppd || 'SARAWAK').toUpperCase().replace(/^PPD\s+/i, '').trim();
-
-                rowsToUpload.push({
-                    nama: name || 'TANPA NAMA',
-                    ppd: ppdName,
-                    icFormatted: icRaw,
-                    icClean: icClean,
-                    jantina: gen,
-                    kohort: coh,
-                    tarikhLahir: `${dd}/${mm}/${fullYear}`
-                });
-                existingIcs.add(icClean);
-                added++;
+                rowsToUpload.push({ nama: name || 'TANPA NAMA', ppd: manualPPD, icFormatted: icRaw, icClean: icClean, jantina: gen, kohort: coh, tarikhLahir: `${dd}/${mm}/${fullYear}` });
+                existingIcs.add(icClean); added++;
             });
 
             if (added > 0) {
-                // MUAT NAIK SECARA BATCH (Had 500 per batch Firestore)
                 for (let i = 0; i < rowsToUpload.length; i += 500) {
-                    const batch = db.batch();
-                    const chunk = rowsToUpload.slice(i, i + 500);
-                    chunk.forEach(row => {
-                        const docRef = colRef.doc(row.icClean); // Guna IC sebagai ID untuk elak duplikasi
-                        batch.set(docRef, row);
-                    });
+                    const batch = db.batch(); const chunk = rowsToUpload.slice(i, i + 500);
+                    chunk.forEach(row => batch.set(colRef.doc(row.icClean), row));
                     await batch.commit();
                 }
-                setToast({ message: `Berjaya menambah ${added} rekod baharu.`, type: 'success' });
-            } else {
-                setToast({ message: "Tiada rekod baharu yang dikesan (semua pendua).", type: 'error' });
-            }
-          } catch(e) { console.error(e); setToast({ message: "Ralat memproses fail.", type: 'error' }); }
+                setToast({ message: `Berjaya menambah ${added} rekod murid bagi PPD ${manualPPD}.`, type: 'success' });
+            } else { setToast({ message: "Tiada rekod baharu dikesan.", type: 'error' }); }
+          } catch(e) { setToast({ message: "Ralat memproses fail.", type: 'error' }); }
           setLoading(false);
         };
 
@@ -411,73 +401,51 @@
           const headers = ["PPD", "NAMA MURID", "NO MYKID", "TARIKH LAHIR", "JANTINA", "KOHORT"];
           const csvRows = allDataUnique.map(d => [d.ppd, d.nama, d.icClean, d.tarikhLahir, d.jantina, d.kohort]);
           const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...csvRows.map(r => r.join(","))].join("\n");
-          const link = document.createElement("a");
-          link.setAttribute("href", encodeURI(csvContent));
-          link.setAttribute("download", "Analisis_JPNS_Sarawak_2027.csv");
-          document.body.appendChild(link);
-          link.click();
-          document.body.removeChild(link);
+          const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
+          link.setAttribute("download", "Analisis_Sarawak_2027.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         };
 
         const handleCopyTable = () => {
           if (!filteredPPDList.length) return;
           const headers = ["Bil", "Nama PPD", "Jumlah", "7L", "7P", "7Jum", "6L", "6P", "6Jum"];
-          const rows = filteredPPDList.map((p, i) => [
-            i + 1, p.name, p.total, p.c7_l, p.c7_p, p.c7_l + p.c7_p, p.c6_l, p.c6_p, p.c6_l + p.c6_p
-          ]);
-          const tsvContent = [headers.join('\t'), ...rows.map(r => r.join('\t'))].join('\n');
-          const textArea = document.createElement("textarea");
-          textArea.value = tsvContent;
-          document.body.appendChild(textArea);
-          textArea.select();
-          document.execCommand('copy');
+          const tsv = [headers.join('\t'), ...filteredPPDList.map((p, i) => [i + 1, p.name, p.total, p.c7_l, p.c7_p, p.c7_l + p.c7_p, p.c6_l, p.c6_p, p.c6_l + p.c6_p].join('\t'))].join('\n');
+          const ta = document.createElement("textarea"); ta.value = tsv; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); document.body.removeChild(ta);
           setToast({ message: "Jadual rumusan disalin!", type: 'success' });
-          document.body.removeChild(textArea);
+        };
+
+        const handleDeletePPD = async (ppdName) => {
+          setLoading(true);
+          try {
+            const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
+            const snapshot = await colRef.where('ppd', '==', ppdName).get();
+            const batch = db.batch();
+            snapshot.forEach(doc => batch.delete(doc.ref));
+            await batch.commit();
+            
+            setToast({ message: `Data PPD ${ppdName} telah dipadam.`, type: 'success' });
+          } catch (e) { setToast({ message: "Gagal memadam data.", type: 'error' }); }
+          finally { setLoading(false); setDeleteConfirm({ show: false, ppd: null }); }
         };
 
         const handleResetData = async () => {
-          if(window.confirm('Adakah anda pasti mahu memadam semua data dari awan secara kekal?')) { 
-            try {
-              setLoading(true);
-              const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
-              const snapshot = await colRef.get();
-              
-              const chunks = [];
-              const docs = snapshot.docs;
-              for (let i = 0; i < docs.length; i += 500) {
-                chunks.push(docs.slice(i, i + 500));
-              }
-
-              for (const chunk of chunks) {
-                const batch = db.batch();
-                chunk.forEach(doc => batch.delete(doc.ref));
-                await batch.commit();
-              }
-
-              setData([]);
-              setToast({ message: "Semua data berjaya dipadam.", type: 'success' });
-            } catch (e) { console.error(e); setToast({ message: "Ralat memadam data.", type: 'error' }); }
-            finally { setLoading(false); }
-          }
+          setLoading(true);
+          try {
+            const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
+            const snapshot = await colRef.get();
+            const docs = snapshot.docs;
+            for (let i = 0; i < docs.length; i += 500) {
+              const batch = db.batch(); const chunk = docs.slice(i, i + 500);
+              chunk.forEach(doc => batch.delete(doc.ref)); await batch.commit();
+            }
+            setData([]); setToast({ message: "Semua data murid dipadam.", type: 'success' });
+          } catch (e) { setToast({ message: "Ralat memadam data.", type: 'error' }); }
+          finally { setLoading(false); setResetConfirm(false); }
         };
 
-        const handlePrint = () => { if (window.self !== window.top) setShowPrintModal(true); else window.print(); };
-
-        const parseDataInputCSV = (text) => {
-            const lines = text.split(/\r\n|\n/);
-            const headers = lines[0].split(lines[0].includes('\t') ? '\t' : ',').map(h => h.trim().replace(/^"|"$/g, ''));
-            return lines.slice(1).map(line => {
-                const cols = line.split(line.includes('\t') ? '\t' : ',');
-                const obj = {};
-                headers.forEach((h, i) => { obj[h] = cols[i] ? cols[i].trim().replace(/^"|"$/g, '') : ''; });
-                return obj;
-            });
-        }
-
         if (loading && data.length === 0) return (
-            <div className="min-h-screen flex items-center justify-center flex-col">
+            <div className="min-h-screen flex items-center justify-center flex-col animate-pulse">
               <div className="loader"></div>
-              <p className="mt-4 text-slate-500 font-bold text-sm uppercase tracking-widest italic font-['Plus Jakarta Sans']">Menyusun Data Sarawak...</p>
+              <p className="mt-4 text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] italic">Menyusun Data Sarawak...</p>
             </div>
         );
 
@@ -485,126 +453,74 @@
           <div className="min-h-screen pb-10">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
             
-            {showPrintModal && (
-              <div className="fixed inset-0 z-[999] flex items-center justify-center bg-slate-900/40 backdrop-blur-sm px-4 no-print">
-                <div className="bg-white p-8 rounded-3xl shadow-2xl max-w-sm w-full text-center animate-fade-in border border-slate-100">
-                  <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mx-auto mb-5">
-                    <Icons.Printer className="w-8 h-8" />
-                  </div>
-                  <h3 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">Cetak Laporan</h3>
-                  <p className="text-xs text-slate-500 mb-6 font-bold leading-relaxed px-2">Sila gunakan pintasan papan kekunci pada skrin ini:</p>
-                  <div className="flex justify-center gap-4 mb-8">
-                    <div className="bg-slate-50 px-4 py-3 rounded-xl font-mono font-bold text-slate-800 border border-slate-200 shadow-inner text-xs">CTRL + P<br/><span className="text-[9px] text-slate-400 font-sans uppercase tracking-widest mt-1 block font-normal">Windows</span></div>
-                    <div className="bg-slate-50 px-4 py-3 rounded-xl font-mono font-bold text-slate-800 border border-slate-200 shadow-inner text-xs">CMD + P<br/><span className="text-[9px] text-slate-400 font-sans uppercase tracking-widest mt-1 block font-normal">Mac</span></div>
-                  </div>
-                  <button onClick={() => setShowPrintModal(false)} className="w-full py-3 bg-slate-900 hover:bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest transition-colors shadow-lg">Tutup</button>
-                </div>
-              </div>
-            )}
+            {/* Confirmation Modals */}
+            <ConfirmModal 
+              show={deleteConfirm.show} 
+              title="Hapuskan Data?" 
+              message={`Adakah anda pasti mahu memadam semua rekod murid bagi PPD ${deleteConfirm.ppd}? Tindakan ini tidak boleh dibatalkan.`}
+              onConfirm={() => handleDeletePPD(deleteConfirm.ppd)}
+              onCancel={() => setDeleteConfirm({ show: false, ppd: null })}
+            />
+            <ConfirmModal 
+              show={resetConfirm} 
+              title="Padam Semua Data?" 
+              message="Anda akan memadam SELURUH pangkalan data murid di Sarawak. Pastikan anda mempunyai salinan fail asal."
+              onConfirm={handleResetData}
+              onCancel={() => setResetConfirm(false)}
+            />
+            <ConfirmModal 
+              show={cleanupConfirm} 
+              title="Bersihkan Data?" 
+              message="Sistem akan mencari dan memadam rekod 'sampah' yang tiada pengenalan PPD sah. Rekod murid sedia ada selamat."
+              confirmText="Bersihkan"
+              type="warning"
+              onConfirm={handleCleanupData}
+              onCancel={() => setCleanupConfirm(false)}
+            />
 
             <header className="glass-header px-10 py-6 flex flex-col md:flex-row justify-between items-center gap-6 no-print">
               <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-lg">JPN</div>
-                <div className="text-left">
-                  <h1 className="text-xl font-extrabold text-slate-900 leading-none">ANALISIS PERMOHONAN TAHUN 1</h1>
-                  <p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-2">Sarawak • Sesi 2027</p>
-                </div>
+                <div className="w-14 h-14 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-lg">JPNS</div>
+                <div className="text-left"><h1 className="text-xl font-extrabold text-slate-900 leading-none uppercase">Analisis Permohonan Tahun 1</h1><p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-2">Sarawak • Sesi 2027</p></div>
               </div>
-              <button onClick={handlePrint} className="flex items-center gap-2 bg-slate-100 px-6 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 border border-slate-200 transition-all text-slate-700 shadow-sm cursor-pointer">
-                <Icons.Printer /> Cetak Laporan
-              </button>
+              <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit font-black uppercase text-[10px]">
+                 <button onClick={()=>setActiveTab('dashboard')} className={`px-10 py-3 rounded-[1.2rem] transition-all ${activeTab==='dashboard'?'active-tab-btn':'text-slate-400'}`}>DASHBOARD</button>
+                 <button onClick={()=>setActiveTab('list')} className={`px-10 py-3 rounded-[1.2rem] transition-all ${activeTab==='list'?'active-tab-btn':'text-slate-400'}`}>PENGURUSAN DATA</button>
+                 <button onClick={()=>setActiveTab('info')} className={`px-10 py-3 rounded-[1.2rem] transition-all ${activeTab==='info'?'active-tab-btn':'text-slate-400'}`}>INFO SISTEM</button>
+              </div>
+              <button onClick={()=>window.print()} className="flex items-center gap-2 bg-slate-100 px-6 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all shadow-sm"><Icons.Printer /> Cetak Laporan</button>
             </header>
 
-            <main className="max-w-7xl mx-auto px-8 py-10 space-y-10 font-['Plus Jakarta Sans']">
-              <div className="flex bg-white p-2 rounded-2xl shadow-sm border border-slate-200 w-fit no-print mx-auto">
-                <button onClick={()=>setActiveTab('dashboard')} className={`px-10 py-3 rounded-xl text-sm font-bold transition-all ${activeTab==='dashboard'?'active-tab':'text-slate-500 hover:text-slate-800'}`}>DASHBOARD</button>
-                <button onClick={()=>setActiveTab('list')} className={`px-10 py-3 rounded-xl text-sm font-bold transition-all ${activeTab==='list'?'active-tab':'text-slate-500 hover:text-slate-800'}`}>PENGURUSAN DATA</button>
-                <button onClick={()=>setActiveTab('info')} className={`px-10 py-3 rounded-xl text-sm font-bold transition-all ${activeTab==='info'?'active-tab':'text-slate-500 hover:text-slate-800'}`}>INFO SISTEM</button>
-              </div>
-
+            <main className="max-w-7xl mx-auto px-8 py-10 space-y-10 font-['Plus Jakarta Sans'] text-center">
               {activeTab === 'dashboard' && (
                 <div className="space-y-10 animate-fade-in">
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     <StatCard title="Jumlah Permohonan" value={stats.total.toLocaleString()} icon={Icons.FileText} colorClass="border-l-slate-800" />
-                    
                     <div className="premium-card p-6 flex flex-col h-full">
-                       <div className="flex justify-between items-center mb-6">
-                          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Analisis Kohort (Jantina)</p>
-                          <div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.Users /></div>
-                       </div>
+                       <div className="flex justify-between items-center mb-6"><p className="text-sm font-bold text-slate-500 uppercase tracking-wider text-left">Analisis Kohort</p><div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.Users /></div></div>
                        <div className="overflow-hidden rounded-xl border border-slate-100">
-                          <table className="min-w-full text-center text-xs font-bold uppercase tracking-tight">
+                          <table className="min-w-full text-center text-[11px] font-bold uppercase tracking-tight">
                              <thead className="bg-slate-50 text-slate-400 border-b">
-                                <tr>
-                                   <th className="px-4 py-3 border-r">Jantina</th>
-                                   <th className="px-4 py-3 border-r text-indigo-600 bg-indigo-50/20">7 Tahun</th>
-                                   <th className="px-4 py-3 border-r text-orange-600 bg-orange-50/20">6 Tahun</th>
-                                   <th className="px-4 py-3 bg-slate-100 text-slate-900">Jumlah</th>
-                                </tr>
+                                <tr><th className="px-4 py-3 border-r">Jantina</th><th className="px-4 py-3 border-r text-indigo-600">7 Tahun</th><th className="px-4 py-3 border-r text-orange-600">6 Tahun</th><th className="px-4 py-3 bg-slate-100 text-slate-900">Jumlah</th></tr>
                              </thead>
                              <tbody className="divide-y divide-slate-50">
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="px-4 py-4 text-slate-800 border-r">Lelaki</td>
-                                  <td className="px-4 py-4 text-slate-600 border-r">{stats.cohortValues.c7_m}</td>
-                                  <td className="px-4 py-4 text-slate-600 border-r">{stats.cohortValues.c6_m}</td>
-                                  <td className="px-4 py-4 bg-slate-50 text-blue-600 font-black">{stats.cohortValues.total_m}</td>
-                                </tr>
-                                <tr className="hover:bg-slate-50/50 transition-colors">
-                                  <td className="px-4 py-4 text-slate-800 border-r">Perempuan</td>
-                                  <td className="px-4 py-4 text-slate-600 border-r">{stats.cohortValues.c7_p}</td>
-                                  <td className="px-4 py-4 text-slate-600 border-r">{stats.cohortValues.c6_p}</td>
-                                  <td className="px-4 py-4 bg-slate-50 text-pink-600 font-black">{stats.cohortValues.total_p}</td>
-                                </tr>
-                                <tr className="bg-slate-100 transition-colors font-black">
-                                  <td className="px-4 py-4 text-slate-900 border-r">Jumlah</td>
-                                  <td className="px-4 py-4 text-slate-900 border-r">{stats.cohortValues.c7_total}</td>
-                                  <td className="px-4 py-4 text-slate-900 border-r">{stats.cohortValues.c6_total}</td>
-                                  <td className="px-4 py-4 bg-slate-900 text-white font-black">{stats.cohortValues.grand_total}</td>
-                                </tr>
+                                <tr className="hover:bg-slate-50/50"><td className="px-4 py-4 text-slate-800 border-r text-left">Lelaki</td><td className="px-4 py-4 border-r">{stats.cohortValues.c7_m}</td><td className="px-4 py-4 border-r">{stats.cohortValues.c6_m}</td><td className="px-4 py-4 bg-slate-50 text-blue-600 font-black">{stats.cohortValues.total_m}</td></tr>
+                                <tr className="hover:bg-slate-50/50"><td className="px-4 py-4 text-slate-800 border-r text-left">Perempuan</td><td className="px-4 py-4 border-r">{stats.cohortValues.c7_p}</td><td className="px-4 py-4 border-r">{stats.cohortValues.c6_p}</td><td className="px-4 py-4 bg-slate-50 text-pink-600 font-black">{stats.cohortValues.total_p}</td></tr>
+                                <tr className="bg-slate-100 font-black"><td className="px-4 py-4 text-slate-900 border-r text-left">Jumlah</td><td className="px-4 py-4 border-r">{stats.cohortValues.c7_total}</td><td className="px-4 py-4 border-r">{stats.cohortValues.c6_total}</td><td className="px-4 py-4 bg-slate-900 text-white font-black">{stats.cohortValues.grand_total}</td></tr>
                              </tbody>
                           </table>
                        </div>
                     </div>
-
-                    <div className="premium-card p-6 flex flex-col h-full">
-                       <div className="flex justify-between items-center mb-6">
-                          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Jantina Keseluruhan</p>
-                          <div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.CheckCircle /></div>
-                       </div>
-                       <div className="h-40">
-                         <Chart.ResponsiveContainer width="100%" height="100%">
-                            <Chart.BarChart data={stats.genderData} margin={{top: 25, right: 10, left: 10, bottom: 0}}>
-                               <Chart.CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0"/>
-                               <Chart.XAxis dataKey="name" tick={{fontSize: 11, fontWeight: 600, fill: '#64748b'}} axisLine={false} tickLine={false} />
-                               <Chart.Bar dataKey="value" radius={[4,4,0,0]} barSize={32}>
-                                  {stats.genderData.map((e, i) => <Chart.Cell key={i} fill={e.color} />)}
-                                  <Chart.LabelList dataKey="value" position="top" fontSize={12} fontWeight={800} fill="#1e293b" />
-                               </Chart.Bar>
-                            </Chart.BarChart>
-                         </Chart.ResponsiveContainer>
-                       </div>
-                    </div>
+                    <div className="premium-card p-6 flex flex-col h-full"><div className="flex justify-between items-center mb-6"><p className="text-sm font-bold text-slate-500 uppercase tracking-wider text-left">Pecahan Jantina</p><div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.CheckCircle /></div></div><div className="h-40"><Chart.ResponsiveContainer width="100%" height="100%"><Chart.BarChart data={stats.genderData} margin={{top: 25, right: 10, left: 10, bottom: 0}}><Chart.CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0"/><Chart.XAxis dataKey="name" tick={{fontSize: 11, fontWeight: 600, fill: '#64748b'}} axisLine={false} tickLine={false} /><Chart.Bar dataKey="value" radius={[4,4,0,0]} barSize={32}>{stats.genderData.map((e, i) => <Chart.Cell key={i} fill={e.color} />)}<Chart.LabelList dataKey="value" position="top" fontSize={12} fontWeight={800} fill="#1e293b" /></Chart.Bar></Chart.BarChart></Chart.ResponsiveContainer></div></div>
                   </div>
 
                   <div className="premium-card overflow-hidden bg-white">
                     <div className="p-8 border-b flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/50 no-print">
-                      <div className="text-left w-full md:w-auto">
-                        <h3 className="text-base font-extrabold text-slate-900 uppercase tracking-widest">Rumusan Per Daerah Sarawak</h3>
-                        <p className="text-xs font-semibold text-slate-500 mt-1 uppercase tracking-wider">Pecahan Bilangan Murid Mengikut Kohort</p>
-                      </div>
+                      <div className="text-left w-full md:w-auto"><h3 className="text-base font-extrabold text-slate-900 uppercase tracking-widest">Rumusan Per Daerah Sarawak</h3><p className="text-xs font-semibold text-slate-500 mt-1 uppercase">Pecahan Bilangan Murid Mengikut Kohort</p></div>
                       <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center font-black">
-                         <button onClick={handleCopyTable} className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm uppercase tracking-widest">
-                           <Icons.Copy className="w-4 h-4" /> Salin Jadual
-                         </button>
+                         <button onClick={handleCopyTable} className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm uppercase tracking-widest leading-none"><Icons.Copy className="w-4 h-4" /> Salin Jadual</button>
                          <div className="relative w-full md:w-64">
-                            <Icons.Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" />
-                            <input 
-                              type="text" 
-                              placeholder="Cari Daerah PPD..." 
-                              value={searchQuery}
-                              onChange={(e) => setSearchQuery(e.target.value)}
-                              className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-800 transition-all shadow-sm"
-                            />
+                            <Icons.Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input type="text" placeholder="Cari Daerah PPD..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-800 transition-all shadow-sm uppercase" />
                          </div>
                       </div>
                     </div>
@@ -615,26 +531,32 @@
                             <th rowSpan="2" className="border-r border-b px-4 py-4 text-slate-400 tracking-wider">Bil</th>
                             <th rowSpan="2" className="text-left border-r border-b px-6 py-4 text-slate-500 tracking-wider w-1/4">Nama PPD</th>
                             <th rowSpan="2" className="bg-slate-100/50 border-r border-b px-6 py-4 text-slate-900 tracking-wider">Jumlah</th>
-                            <th colSpan="3" className="bg-orange-50/50 border-b border-r px-6 py-3 text-slate-600 tracking-wider">Kohort 7 Thn (6+)</th>
-                            <th colSpan="3" className="bg-blue-50/50 border-b px-6 py-3 text-slate-600 tracking-wider">Kohort 6 Thn (5+)</th>
+                            <th colSpan="3" className="bg-orange-50/50 border-b border-r px-6 py-3 text-slate-600 tracking-wider font-black">Kohort 7 Thn (6+)</th>
+                            <th colSpan="3" className="bg-blue-50/50 border-b border-r px-6 py-3 text-slate-600 tracking-wider font-black">Kohort 6 Thn (5+)</th>
+                            <th rowSpan="2" className="border-b px-6 py-4 text-slate-400 tracking-wider action-col">Tindakan</th>
                           </tr>
                           <tr className="bg-slate-50/30 text-slate-500">
                              <th className="border-r border-b py-3 px-4">L</th><th className="border-r border-b py-3 px-4">P</th>
-                             <th className="border-r border-b py-3 px-4 text-orange-700 bg-orange-50/50">Jum</th>
+                             <th className="border-r border-b py-3 px-4 text-orange-700 bg-orange-50/50 font-black">Jum</th>
                              <th className="border-r border-b py-3 px-4">L</th><th className="border-r border-b py-3 px-4">P</th>
-                             <th className="border-b py-3 px-4 text-blue-700 bg-blue-50/50">Jum</th>
+                             <th className="border-r border-b py-3 px-4 text-blue-700 bg-blue-50/50 font-black">Jum</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 text-[11px]">
+                        <tbody className="divide-y divide-slate-100 text-[11px] font-bold">
                           {filteredPPDList.map((p, i) => (
                             <tr key={p.name} className="hover:bg-slate-50/80 transition-colors">
                               <td className="text-slate-300 text-center border-r py-3.5">{i+1}</td>
-                              <td className="text-left text-slate-800 font-black border-r py-3.5 px-6">{p.name}</td>
-                              <td className="bg-slate-50/30 text-slate-950 border-r font-black py-3.5">{p.total}</td>
-                              <td className="text-blue-600 border-r py-3.5 font-bold">{p.c7_l}</td><td className="text-pink-600 border-r py-3.5 font-bold">{p.c7_p}</td>
-                              <td className="text-orange-700 border-r py-3.5 font-black bg-orange-50/30">{p.c7_l + p.c7_p}</td>
-                              <td className="text-blue-600 border-r py-3.5 font-bold">{p.c6_l}</td><td className="text-pink-600 border-r py-3.5 font-bold">{p.c6_p}</td>
-                              <td className="text-blue-700 py-3.5 font-black bg-blue-50/30">{p.c6_l + p.c6_p}</td>
+                              <td className="text-left text-slate-800 font-black border-r py-3.5 px-6">PPD {p.name}</td>
+                              <td className="bg-slate-50/30 text-slate-950 border-r font-black py-3.5 text-base">{p.total}</td>
+                              <td className="text-blue-600 border-r py-3.5">{p.c7_l}</td><td className="text-pink-600 border-r py-3.5">{p.c7_p}</td>
+                              <td className="text-orange-700 border-r py-3.5 font-black bg-orange-50/20">{p.c7_l + p.c7_p}</td>
+                              <td className="text-blue-600 border-r py-3.5">{p.c6_l}</td><td className="text-pink-600 border-r py-3.5">{p.c6_p}</td>
+                              <td className="text-blue-700 border-r py-3.5 font-black bg-blue-50/20">{p.c6_l + p.c6_p}</td>
+                              <td className="py-3.5 action-col">
+                                <button onClick={() => setDeleteConfirm({ show: true, ppd: p.name })} className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95 group">
+                                  <Icons.Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                                </button>
+                              </td>
                             </tr>
                           ))}
                         </tbody>
@@ -647,70 +569,34 @@
               {activeTab === 'list' && (
                 <div className="max-w-3xl mx-auto space-y-10 no-print animate-fade-in uppercase font-black">
                   <div className="premium-card p-12 text-center space-y-8">
-                    <div className="mb-8 w-full max-w-sm mx-auto">
-                      <label className="block text-[10px] font-bold text-slate-400 tracking-widest mb-3 uppercase">Pilih PPD Penghantar</label>
-                      <select value={manualPPD} onChange={(e) => setManualPPD(e.target.value)} className="w-full px-6 py-4 bg-slate-50 text-xs font-black rounded-2xl border border-slate-200 outline-none focus:border-red-500 transition-all cursor-pointer text-center uppercase tracking-widest">
-                        <option value="">-- PILIH PPD --</option>
-                        {PPD_LIST.map(p => <option key={p} value={p}>{p}</option>)}
-                      </select>
+                    <div className="mb-8 w-full max-w-sm mx-auto font-bold uppercase">
+                      <label className="block text-[10px] font-bold text-slate-400 tracking-widest mb-3 uppercase leading-none">Langkah 1: Pilih PPD Utama</label>
+                      <select value={manualPPD} onChange={(e) => setManualPPD(e.target.value)} className="w-full px-6 py-4 bg-slate-50 text-xs font-black rounded-2xl border border-slate-200 outline-none focus:border-red-500 transition-all cursor-pointer text-center uppercase tracking-widest shadow-inner"><option value="">-- SILAH PILIH DAERAH PPD --</option>{PPD_LIST.map(p => <option key={p} value={p}>PPD {p}</option>)}</select>
                     </div>
-                    <div className="relative group p-14 border-4 border-dashed border-slate-200 rounded-[3rem] hover:bg-slate-50 transition-all cursor-pointer">
-                      <input type="file" accept=".csv,.xlsx,.xls" onChange={(e)=>{ 
-                          const file = e.target.files[0]; 
-                          if (file) { 
-                            const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls'); 
-                            const reader = new FileReader(); 
-                            reader.onload = (ev) => { 
-                              if(isExcel) { 
-                                const workbook = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); 
-                                const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); 
-                                handleProcessData(rows, true); 
-                              } else { 
-                                handleProcessData(ev.target.result, false); 
-                              }
-                            }; 
-                            if(isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file); 
-                          } 
-                      }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                    
+                    <div className={`relative group p-14 border-4 border-dashed rounded-[3rem] transition-all ${manualPPD ? 'border-slate-200 hover:bg-slate-50 cursor-pointer' : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'}`}>
+                      {manualPPD && <input type="file" accept=".csv,.xlsx,.xls" onChange={(e)=>{ const file = e.target.files[0]; if (file) { const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls'); const reader = new FileReader(); reader.onload = (ev) => { if(isExcel) { const workbook = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); handleProcessData(rows, true); } else { handleProcessData(ev.target.result, false); } }; if(isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file); } }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />}
                       <div className="w-20 h-20 bg-slate-900 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl"><Icons.Upload /></div>
                       <h3 className="text-xl font-black text-slate-900 leading-tight">MUAT NAIK FAIL DATA</h3>
                       <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] mt-2 uppercase">Sokongan Fail: Excel (.xlsx) atau CSV</p>
+                      {!manualPPD && <p className="mt-4 text-red-500 text-[9px] font-black italic">! Sila Pilih PPD di atas terlebih dahulu</p>}
                     </div>
+
                     <div className="grid grid-cols-2 gap-6 pt-10 border-t border-slate-100">
-                      <button onClick={handleDownloadCSV} className="bg-slate-900 text-white py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg">
-                        <Icons.Download /> Muat Turun CSV 
-                      </button>
-                      <button onClick={handleResetData} className="bg-red-50 text-red-600 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center gap-3">
-                        <Icons.Trash2 /> Kosongkan Pangkalan Data
-                      </button>
+                      <button onClick={handleDownloadCSV} className="bg-slate-900 text-white py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg"><Icons.Download /> Muat Turun CSV</button>
+                      <button onClick={() => setResetConfirm(true)} className="bg-red-50 text-red-600 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center gap-3 leading-none font-black"><Icons.Trash2 /> Padam Semua Data</button>
+                    </div>
+
+                    <div className="pt-4">
+                       <button onClick={() => setCleanupConfirm(true)} className="w-full py-4 bg-orange-50 text-orange-700 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-orange-100 border border-orange-200 transition-all flex items-center justify-center gap-2 font-black leading-none"><Icons.ShieldAlert /> Bersihkan Rekod Tidak Sah</button>
                     </div>
                   </div>
 
                   <div className="premium-card p-10 bg-white text-left shadow-lg font-['Plus Jakarta Sans'] font-bold uppercase">
-                     <h3 className="text-sm font-bold text-slate-900 tracking-widest mb-8 border-b pb-4 flex items-center gap-3">
-                        <Icons.CheckCircle className="text-emerald-500 w-5 h-5"/> Status Penghantaran Data PPD
-                     </h3>
+                     <h3 className="text-sm font-bold text-slate-900 tracking-widest mb-8 border-b pb-4 flex items-center gap-3"><Icons.CheckCircle className="text-emerald-500 w-5 h-5"/> Status Penghantaran Data PPD</h3>
                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div>
-                          <h4 className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-widest">Sudah Muat Naik ({sudahMuatNaik.length}/30)</h4>
-                          <div className="grid grid-cols-2 gap-3">
-                             {sudahMuatNaik.map(p => (
-                               <div key={p} className="text-[9px] font-bold text-slate-700 bg-emerald-50 py-2.5 px-3 rounded-lg border border-emerald-100 flex justify-between items-center">
-                                  {p} <Icons.CheckCircle className="w-3 h-3 text-emerald-500" />
-                               </div>
-                             ))}
-                          </div>
-                       </div>
-                       <div>
-                          <h4 className="text-[10px] font-bold text-red-500 uppercase mb-4 tracking-widest">Belum Muat Naik ({belumMuatNaik.length}/30)</h4>
-                          <div className="grid grid-cols-2 gap-3">
-                             {belumMuatNaik.map(p => (
-                               <div key={p} className="text-[9px] font-bold text-slate-500 bg-slate-50 py-2.5 px-3 rounded-lg border border-slate-100 flex justify-between items-center">
-                                  {p} <Icons.XCircle className="w-3 h-3 text-red-300" />
-                               </div>
-                             ))}
-                          </div>
-                       </div>
+                       <div><h4 className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-widest leading-none">Sudah Muat Naik ({sudahMuatNaik.length}/30)</h4><div className="grid grid-cols-2 gap-3">{sudahMuatNaik.map(p => (<div key={p} className="text-[9px] font-bold text-slate-700 bg-emerald-50 py-2.5 px-3 rounded-lg border border-emerald-100 flex justify-between items-center">{p} <Icons.CheckCircle className="w-3 h-3 text-emerald-500" /></div>))}</div></div>
+                       <div><h4 className="text-[10px] font-bold text-red-500 uppercase mb-4 tracking-widest leading-none">Belum Muat Naik ({belumMuatNaik.length}/30)</h4><div className="grid grid-cols-2 gap-3">{belumMuatNaik.map(p => (<div key={p} className="text-[9px] font-bold text-slate-500 bg-slate-50 py-2.5 px-3 rounded-lg border border-slate-100 flex justify-between items-center">{p} <Icons.XCircle className="w-3 h-3 text-red-300" /></div>))}</div></div>
                      </div>
                   </div>
                 </div>
@@ -719,27 +605,12 @@
               {activeTab === 'info' && (
                 <div className="max-w-4xl mx-auto animate-fade-in no-print font-['Plus Jakarta Sans'] font-bold uppercase">
                    <div className="premium-card p-12 space-y-10 text-left">
-                      <div className="flex items-center gap-4 border-b border-slate-100 pb-8">
-                         <div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800"><Icons.Info className="w-6 h-6"/></div>
-                         <h2 className="text-2xl font-extrabold text-slate-900 tracking-tighter uppercase leading-none">Maklumat Pengurusan Sistem</h2>
-                      </div>
+                      <div className="flex items-center gap-4 border-b border-slate-100 pb-8"><div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800"><Icons.Info className="w-6 h-6"/></div><h2 className="text-2xl font-extrabold text-slate-900 tracking-tighter uppercase leading-none">Maklumat Pengurusan Sistem</h2></div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-[11px] leading-relaxed text-slate-600">
-                         <div className="space-y-3">
-                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">1. Konsolidasi Data</h4>
-                            <p>Sistem menggabungkan data permohonan dari setiap daerah Sarawak secara unik berasaskan No. MyKid murid bagi menjamin ketepatan statistik.</p>
-                         </div>
-                         <div className="space-y-3">
-                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">2. Integriti Sarawak</h4>
-                            <p>Status penghantaran dipaparkan bagi membolehkan pemantauan daerah yang melengkapkan data permohonan Tahun 1 bagi sesi 2027 secara telus.</p>
-                         </div>
-                         <div className="space-y-3">
-                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">3. Jantina Mutlak</h4>
-                            <p>Logik sistem memproses jantina murid secara automatik berpandukan digit ke-12 No. MyKid (Ganjil=Lelaki, Genap=Perempuan) bagi menjamin ketepatan 100%.</p>
-                         </div>
-                         <div className="space-y-3">
-                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">4. Kohort Umur</h4>
-                            <p>Sistem secara automatik mengasingkan murid mengikut kumpulan umur berdasarkan tarikh lahir yang diekstrak dari No. MyKid.</p>
-                         </div>
+                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">1. Konsolidasi Data</h4><p>Sistem menggabungkan data permohonan dari setiap daerah Sarawak secara unik berasaskan No. MyKid murid bagi menjamin ketepatan statistik.</p></div>
+                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">2. Kawalan Integriti</h4><p>Fungsi pemadaman disediakan secara spesifik bagi setiap PPD melalui Dashboard untuk memudahkan pembetulan data daerah tanpa mengganggu daerah lain.</p></div>
+                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">3. Jantina Mutlak</h4><p>Logik sistem memproses jantina murid secara automatik berpandukan digit ke-12 No. MyKid (Ganjil=Lelaki, Genap=Perempuan) bagi menjamin ketepatan 100%.</p></div>
+                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">4. Kohort Umur</h4><p>Sistem secara automatik mengasingkan murid mengikut kumpulan umur berdasarkan tarikh lahir yang diekstrak dari No. MyKid.</p></div>
                       </div>
                    </div>
                 </div>
