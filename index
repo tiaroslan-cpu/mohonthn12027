@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dashboard JPNS Sarawak - Kohort 2027</title>
+  <title>Analisis Permohonan Tahun 1 Sesi Akademik 2027, Jabatan Pendidikan Negeri Sarawak</title>
   
   <!-- Skrip Luaran Utama -->
   <script src="https://cdn.tailwindcss.com"></script>
@@ -20,26 +20,27 @@
   <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap');
     
     ::-webkit-scrollbar { width: 6px; height: 6px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
     
     body { 
-      background-color: #f8fafc; 
-      font-family: 'Plus Jakarta Sans', sans-serif;
+      background-color: #f1f5f9; 
+      font-family: 'Nunito', sans-serif;
       margin: 0;
       overflow-x: hidden;
+      color: #1e293b;
       -webkit-font-smoothing: antialiased;
     }
 
     .loader-spinner {
-      border: 3px solid #f3f3f3;
+      border: 4px solid #f3f3f3;
       border-radius: 50%;
       border-top: 3px solid #dc2626;
-      width: 35px;
-      height: 35px;
+      width: 40px;
+      height: 40px;
       animation: spin 0.8s linear infinite;
     }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
@@ -47,422 +48,495 @@
     .premium-card {
       background: #ffffff;
       border: 1px solid #e2e8f0;
-      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
-      border-radius: 1.25rem;
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+      border-radius: 1.5rem;
+      transition: all 0.3s ease;
+      overflow: hidden; /* Pastikan label tidak terkeluar */
     }
 
     .glass-header {
-      background: rgba(255, 255, 255, 0.95);
-      backdrop-filter: blur(10px);
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(12px);
       border-bottom: 1px solid #e2e8f0;
       position: sticky;
       top: 0;
       z-index: 50;
     }
 
-    .animate-fade-in { animation: fadeIn 0.4s ease-out; }
+    .animate-fade-in { animation: fadeIn 0.5s ease-out forwards; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .active-tab-btn {
+      background: #dc2626 !important;
+      color: white !important;
+      box-shadow: 0 4px 12px rgba(220, 38, 38, 0.2);
+    }
+
+    .btn-action {
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .btn-action:hover { transform: translateY(-2px); }
+    .btn-action:active { transform: scale(0.95); }
+
+    table tr:last-child td { border-bottom: 0; }
+    
+    /* Memastikan teks panjang dalam jadual tidak melimpah */
+    .truncate-custom {
+      max-width: 200px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
   </style>
 </head>
 <body>
   <div id="root">
-    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 80vh;">
+    <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh;">
       <div class="loader-spinner"></div>
-      <p style="margin-top: 20px; color: #64748b; font-size: 14px; font-weight: 700;">MENYEGARKAN DATA JPNS...</p>
+      <p style="margin-top: 20px; color: #64748b; font-size: 14px; font-weight: 800; font-family: 'Nunito', sans-serif;">MEMULAKAN ANALISIS SARAWAK...</p>
     </div>
   </div>
 
   <script type="text/babel">
     const { useState, useMemo, useEffect, Fragment } = React;
-    const { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Cell, LabelList, Legend } = window.Recharts;
+    const { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Cell, LabelList, Legend, Tooltip } = window.Recharts;
 
-    // --- TETAPAN SISTEM ---
     const appId = 'jpns-sarawak-2027-official';
-    const THEME = { chartColors: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899'] };
     const COHORT_NAMES = { C7: 'Umur 6+ (7 Tahun)', C6: 'Umur 5+ (6 Tahun)', LUAR: 'Luar Kohort' };
     const COHORT_RANGES_INT = { C7: { start: 20200102, end: 20210101 }, C6: { start: 20210102, end: 20220101 } };
-    
+    const THEME = { chartColors: ['#EF4444', '#F59E0B', '#3B82F6', '#8B5CF6', '#EC4899'] };
+
     const PPD_LIST = [
       "BARAM", "BAU", "BELAGA", "BETONG", "BINTULU", "DALAT", "DARO", 
       "JULAU", "KANOWIT", "KAPIT", "KUCHING", "LAWAS", "LIMBANG", 
       "LUBOK ANTU", "LUNDU", "MERADONG", "MIRI", "MUKAH", 
       "PADAWAN", "SAMARAHAN", "SARATOK", "SARIKEI", "SELANGAU", 
       "SERIAN", "SIBU", "SIMUNJAN", "SONG", "SRI AMAN", "SUBIS", "TATAU"
-    ];
+    ].sort(); 
 
-    // --- ICONS ---
     const Icons = {
-      Upload: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>,
-      FileText: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>,
-      Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"/></svg>,
-      CheckCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
-      School: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"/></svg>,
-      Info: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>,
-      XCircle: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"/></svg>,
-      Globe: () => <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9"/></svg>
+      Upload: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Activity: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M13 10V3L4 14h7v7l9-11h-7z" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Download: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Search: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Trash: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-4v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Info: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 16h.01M12 12h.01M12 8h.01M12 22c5.523 0 10-4.477 10-10S17.523 2 12 2 2 6.477 2 12s4.477 10 10 10z" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      Users: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2 M16 3.13a4 4 0 0 1 0 7.75 M23 21v-2a4 4 0 0 0-3-3.87" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>,
+      FileText: () => <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z M14 2v6h6" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
     };
 
-    // --- UI SUB-COMPONENTS ---
-    const StatCard = ({ title, value, children, icon, gradient, onClick, isActive }) => (
-      <div onClick={onClick} className={`relative overflow-hidden p-6 premium-card transition-all duration-300 transform flex flex-col h-full ${onClick ? 'cursor-pointer hover:border-red-300 active:scale-[0.98]' : ''} ${isActive ? 'ring-2 ring-red-500' : ''}`}>
-        <div className="flex justify-between items-start mb-2 relative z-10">
-          <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest">{title}</p>
-          <div className={`p-2 rounded-xl ${gradient} text-white shadow-sm`}>{icon}</div>
-        </div>
-        {value !== undefined && <h3 className="text-3xl font-black text-slate-800 break-words tracking-tighter">{value}</h3>}
-        <div className="flex-1 flex flex-col justify-center relative z-10 w-full overflow-hidden">{children}</div>
-      </div>
-    );
-
-    const MiniBarChart = ({ data, colors, onBarClick }) => (
-      <div className="h-24 w-full mt-2">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} layout="vertical" margin={{top: 0, right: 35, left: -20, bottom: 0}} onClick={(s) => { if(s && s.activePayload && onBarClick) onBarClick(s.activePayload[0].payload.filterKey); }}>
-            <XAxis type="number" hide />
-            <YAxis dataKey="name" type="category" width={80} tick={{fontSize: 9, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} />
-            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={14}>
-              {data.map((e, i) => <Cell key={i} fill={colors[i % colors.length]} className="cursor-pointer" />)}
-              <LabelList dataKey="value" position="right" fontSize={10} fontWeight={900} fill="#475569" />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-    );
-
-    // --- MAIN APP COMPONENT ---
     const App = () => {
-      const [data, setData] = useState([]);
+      const [ppdDataMap, setPpdDataMap] = useState({}); 
       const [loading, setLoading] = useState(true);
       const [activeTab, setActiveTab] = useState('dashboard');
       const [manualPPD, setManualPPD] = useState('');
       const [selectedPPD, setSelectedPPD] = useState('SEMUA PPD');
-      const [cardFilter, setCardFilter] = useState(null);
-      const [expandedCell, setExpandedCell] = useState(null);
+      const [searchQuery, setSearchQuery] = useState('');
       const [user, setUser] = useState(null);
+      const [toast, setToast] = useState(null);
 
+      const firebaseConfig = {
+        apiKey: "AIzaSyABRH2RUVWYB77uNXsk4BHuJw4IrtP3O3c",
+        authDomain: "thn1jpn.firebaseapp.com",
+        projectId: "thn1jpn",
+        storageBucket: "thn1jpn.firebasestorage.app",
+        messagingSenderId: "901531240540",
+        appId: "1:901531240540:web:b49a624f2313ac5e493e99"
+      };
+
+      if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+      const db = firebase.firestore();
+      const auth = firebase.auth();
+
+      // Penyatuan Data secara unik berdasarkan MyKid
       useEffect(() => {
         let isMounted = true;
-        
-        const firebaseConfig = {
-          apiKey: "AIzaSyABRH2RUVWYB77uNXsk4BHuJw4IrtP3O3c",
-          authDomain: "thn1jpn.firebaseapp.com",
-          projectId: "thn1jpn",
-          storageBucket: "thn1jpn.firebasestorage.app",
-          messagingSenderId: "901531240540",
-          appId: "1:901531240540:web:b49a624f2313ac5e493e99"
-        };
-
-        if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const auth = firebase.auth();
-
         auth.signInAnonymously().then(cred => {
           if (isMounted) setUser(cred.user);
-          // Panggil Dokumen Master Sarawak (Laluan Berpusat)
-          const docRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc('master');
-          return docRef.onSnapshot(doc => {
+          const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
+          return colRef.onSnapshot(snapshot => {
             if (isMounted) {
-              if (doc.exists) setData(doc.data().rows || []);
-              else setData([]);
+              const newMap = {};
+              snapshot.forEach(doc => {
+                const rows = doc.data().rows || [];
+                if (doc.id === 'master') {
+                   rows.forEach(r => {
+                      if (!r.icClean && r.icFormatted) {
+                         r.icClean = String(r.icFormatted).replace(/[^0-9]/g, '');
+                      }
+                      const pKey = r.ppd || 'TIADA MAKLUMAT';
+                      if (!newMap[pKey]) newMap[pKey] = [];
+                      newMap[pKey].push(r);
+                   });
+                } else {
+                   newMap[doc.id] = rows;
+                }
+              });
+              setPpdDataMap(newMap);
               setLoading(false);
             }
           }, (err) => { if (isMounted) setLoading(false); });
         }).catch(() => { if (isMounted) setLoading(false); });
-
         return () => { isMounted = false; };
       }, []);
 
-      const determineSchoolType = (schoolName) => {
-        if (!schoolName) return 'LAIN-LAIN';
-        const name = String(schoolName).toUpperCase();
-        if (name.includes('SJK(C)') || name.includes('CHUNG HUA')) return 'SJKC';
-        if (name.includes('SJK(T)')) return 'SJKT';
-        if (name.includes('SK ')) return 'SK';
-        return 'LAIN-LAIN';
-      };
+      const allDataUnique = useMemo(() => {
+        const merged = [];
+        const seen = new Set();
+        Object.values(ppdDataMap).flat().forEach(r => {
+           if (r && (r.icClean || r.icFormatted)) {
+             const key = r.icClean || String(r.icFormatted).replace(/[^0-9]/g, '');
+             if (key && !seen.has(key)) {
+               seen.add(key);
+               merged.push({ ...r, icClean: key });
+             }
+           }
+        });
+        return merged;
+      }, [ppdDataMap]);
 
       const handleFileUpload = (e) => {
         if (!user) return;
         const file = e.target.files[0];
         if(!file) return;
+        if (!manualPPD) { setToast({ message: "Sila pilih PPD dahulu!", type: "error" }); return; }
+
         setLoading(true);
         const reader = new FileReader();
         const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
 
         reader.onload = async (ev) => {
           try {
-            let rows = [];
+            let rawRows = [];
             if (isExcel) {
               const workbook = XLSX.read(new Uint8Array(ev.target.result), { type: 'array' });
-              rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" });
+              const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+              const dataRows = XLSX.utils.sheet_to_json(worksheet, { header: 1, defval: "" });
+              
+              let headerIdx = -1;
+              for (let i = 0; i < Math.min(60, dataRows.length); i++) {
+                const rowStr = dataRows[i].join('').toUpperCase();
+                if (rowStr.includes('NAMA') || rowStr.includes('IC') || rowStr.includes('MYKID')) {
+                  headerIdx = i; break;
+                }
+              }
+              if (headerIdx === -1) {
+                setToast({ message: "Tajuk lajur Nama/IC tidak ditemui.", type: "error" });
+                setLoading(false); return;
+              }
+              const headers = dataRows[headerIdx];
+              for (let i = headerIdx + 1; i < dataRows.length; i++) {
+                const rowObj = {};
+                let hasVal = false;
+                dataRows[i].forEach((val, idx) => {
+                  if (headers[idx]) { rowObj[headers[idx]] = val; if (val) hasVal = true; }
+                });
+                if (hasVal) rawRows.push(rowObj);
+              }
             } else {
-              const lines = ev.target.result.split(/\r\n|\n/);
-              const headers = lines[0].split(lines[0].includes('\t') ? '\t' : ',').map(h => h.trim().replace(/^"|"$/g, ''));
+              const text = ev.target.result;
+              const lines = text.split(/\r\n|\n/);
+              const delimiter = lines[0].includes('\t') ? '\t' : ',';
+              const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^"|"$/g, ''));
               for (let i = 1; i < lines.length; i++) {
-                if (!lines[i].trim()) continue;
                 const row = {};
-                const cols = lines[i].split(lines[0].includes('\t') ? '\t' : ',');
+                const cols = lines[i].split(delimiter);
+                if (cols.length <= 1 && !cols[0]) continue;
                 headers.forEach((h, idx) => { row[h] = cols[idx] ? cols[idx].trim().replace(/^"|"$/g, '') : ''; });
-                rows.push(row);
+                rawRows.push(row);
               }
             }
 
-            const updatedData = [...data];
-            const seenICs = new Set(updatedData.map(d => String(d.icFormatted).replace(/[^0-9]/g,'')));
-            let addedCount = 0;
+            const currentPpdRows = ppdDataMap[manualPPD] || [];
+            const seenICsInAll = new Set(allDataUnique.map(d => String(d.icClean))); 
+            const newRecords = [];
 
-            rows.forEach((r, idx) => {
+            rawRows.forEach((r) => {
               let icRaw = null;
               for (const key in r) {
                 const k = key.toUpperCase().replace(/\s/g, '');
-                if (k.includes('KADPENGENALAN') || k.includes('MYKID') || k === 'IC' || k === 'NOKP') {
-                  icRaw = r[key]; break;
-                }
+                if (!icRaw && (k.includes('KADPENGENALAN') || k.includes('MYKID') || k === 'IC' || k === 'NOKP')) icRaw = r[key];
               }
+
               if (!icRaw) return;
-              const icC = String(icRaw).replace(/[^0-9]/g, '');
-              if(icC.length < 6 || seenICs.has(icC)) return;
-              seenICs.add(icC);
+              const icClean = String(icRaw).replace(/[^0-9]/g, '');
+              if(icClean.length < 6 || seenICsInAll.has(icClean)) return;
+              seenICsInAll.add(icClean);
               
-              let gen = 'Lelaki';
-              if (icC.length >= 12) gen = parseInt(icC.substring(11, 12), 10) % 2 !== 0 ? 'Lelaki' : 'Perempuan';
-              else if (String(r['Jantina'] || r['jantina'] || '').toUpperCase().startsWith('P')) gen = 'Perempuan';
+              let coh = COHORT_NAMES.LUAR, dob = '-';
+              const yy = parseInt(icClean.substring(0, 2), 10), mm = parseInt(icClean.substring(2, 4), 10), dd = parseInt(icClean.substring(4, 6), 10);
+              if (!isNaN(yy) && !isNaN(mm) && !isNaN(dd)) {
+                  const fullYear = yy >= 0 && yy <= 30 ? 2000 + yy : 1900 + yy;
+                  dob = `${dd.toString().padStart(2, '0')}/${mm.toString().padStart(2, '0')}/${fullYear}`;
+                  const dobInt = parseInt(`${fullYear}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`, 10);
+                  if (dobInt >= COHORT_RANGES_INT.C7.start && dobInt <= COHORT_RANGES_INT.C7.end) coh = COHORT_NAMES.C7;
+                  else if (dobInt >= COHORT_RANGES_INT.C6.start && dobInt <= COHORT_RANGES_INT.C6.end) coh = COHORT_NAMES.C6;
+              }
+              const gen = parseInt(icClean.substring(11, 12), 10) % 2 !== 0 ? 'Lelaki' : 'Perempuan';
 
-              let coh = COHORT_NAMES.LUAR;
-              const yy = parseInt(icC.substring(0, 2), 10);
-              const mm = parseInt(icC.substring(2, 4), 10);
-              const dd = parseInt(icC.substring(4, 6), 10);
-              const fullYear = yy >= 0 && yy <= 30 ? 2000 + yy : 1900 + yy;
-              const dobInt = parseInt(`${fullYear}${String(mm).padStart(2,'0')}${String(dd).padStart(2,'0')}`, 10);
-              
-              if (dobInt >= COHORT_RANGES_INT.C7.start && dobInt <= COHORT_RANGES_INT.C7.end) coh = COHORT_NAMES.C7;
-              else if (dobInt >= COHORT_RANGES_INT.C6.start && dobInt <= COHORT_RANGES_INT.C6.end) coh = COHORT_NAMES.C6;
-
-              const cleanPPD = manualPPD || String(r['Nama PPD'] || r['PPD'] || 'SARAWAK').toUpperCase().replace(/^PPD\s+/, '').trim();
-              const school = r['Sekolah Mohon Pilihan 1'] || r['Sekolah Pilihan 1'] || r['SEKOLAH'] || 'TIADA INFO';
-
-              updatedData.push({ 
-                id: Date.now() + idx + Math.random(), 
+              newRecords.push({ 
                 nama: r['Nama Murid'] || r['NAMA'] || 'TANPA NAMA', 
-                ppd: cleanPPD, 
-                icFormatted: icRaw, 
-                tarikhLahir: `${dd}/${mm}/${fullYear}`, 
-                jantina: gen, 
-                kohort: coh, 
-                jenisSekolah: determineSchoolType(school) 
+                ppd: manualPPD.toUpperCase(), 
+                icFormatted: icRaw, icClean: icClean,
+                tarikhLahir: dob, jantina: gen, kohort: coh
               });
-              addedCount++;
             });
 
-            if (addedCount > 0) {
-              await firebase.firestore().collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc('master').set({ rows: updatedData, lastUpdated: new Date().toISOString() });
-              alert(`Berjaya! ${addedCount} rekod baharu digabungkan ke pangkalan data Sarawak.`);
+            if (newRecords.length > 0) {
+              const updatedPpdRows = [...currentPpdRows, ...newRecords];
+              await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc(manualPPD).set({ 
+                rows: updatedPpdRows, lastUpdated: new Date().toISOString() 
+              });
+              setToast({ message: `BERJAYA! ${newRecords.length} rekod baharu ditambah.`, type: "success" });
             } else {
-              alert("Tiada rekod baharu ditambah.");
+              setToast({ message: "Tiada rekod baharu dikesan.", type: "error" });
             }
-          } catch(err) { console.error(err); }
+          } catch(err) { setToast({ message: "Ralat memproses fail muat naik.", type: "error" }); }
           setLoading(false);
+          e.target.value = null;
         };
         if (isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file);
       };
 
+      const handleDownloadCSV = () => {
+        if (!allDataUnique.length) return;
+        const headers = ["PPD", "NAMA MURID", "NO MYKID", "TARIKH LAHIR", "JANTINA", "KOHORT"];
+        const rows = allDataUnique.map(d => [d.ppd, d.nama, d.icClean, d.tarikhLahir, d.jantina, d.kohort]);
+        const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map(r => r.join(","))].join("\n");
+        const link = document.createElement("a");
+        link.setAttribute("href", encodeURI(csvContent));
+        link.setAttribute("download", `Analisis_Sarawak_2027.csv`);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+      };
+
+      const handleDeletePPDData = async () => {
+        if (!manualPPD) { setToast({message: "Pilih PPD untuk dipadam!", type: "error"}); return; }
+        if (!confirm(`Padam semua data PPD ${manualPPD} secara kekal?`)) return;
+        setLoading(true);
+        try {
+           await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc(manualPPD).delete();
+           setToast({message: `Data PPD ${manualPPD} telah dibersihkan.`, type: "success"});
+        } catch(e) { setToast({message: "Gagal memadam data.", type: "error"}); }
+        setLoading(false);
+      };
+
       const stats = useMemo(() => {
-        const pool = selectedPPD === 'SEMUA PPD' ? data : data.filter(d => d.ppd.includes(selectedPPD));
-        if(!pool.length) return { total:0, cBar: [], genderData: [], sBar: [], ppdList:[] };
+        const pool = selectedPPD === 'SEMUA PPD' ? allDataUnique : allDataUnique.filter(d => d.ppd.includes(selectedPPD));
+        if(!pool.length) return { total:0, cBar:[], genderData:[], ppdList:[], activePPDs: 0 };
         
         const c7 = pool.filter(d => d.kohort === COHORT_NAMES.C7).length;
         const c6 = pool.filter(d => d.kohort === COHORT_NAMES.C6).length;
         const male = pool.filter(d => d.jantina === 'Lelaki').length;
         const female = pool.filter(d => d.jantina === 'Perempuan').length;
-        const sk = pool.filter(d => d.jenisSekolah === 'SK').length;
-        const sjkc = pool.filter(d => d.jenisSekolah === 'SJKC').length;
 
-        const ppdMap = pool.reduce((acc, c) => {
-          const name = c.ppd;
-          if (!acc[name]) acc[name] = { name, total: 0, c7: 0, c6: 0, c7_sk: 0, c7_sjkc: 0, c7_lain: 0, c6_sk: 0, c6_sjkc: 0, c6_lain: 0 };
-          acc[name].total++;
-          if (c.kohort === COHORT_NAMES.C7) {
-            acc[name].c7++;
-            if (c.jenisSekolah === 'SK') acc[name].c7_sk++; else if (c.jenisSekolah === 'SJKC') acc[name].c7_sjkc++; else acc[name].c7_lain++;
-          } else if (c.kohort === COHORT_NAMES.C6) {
-            acc[name].c6++;
-            if (c.jenisSekolah === 'SK') acc[name].c6_sk++; else if (c.jenisSekolah === 'SJKC') acc[name].c6_sjkc++; else acc[name].c6_lain++;
-          }
-          return acc;
-        }, {});
+        // Agregat PPD berdasarkan pool unik
+        const ppdGroups = {};
+        pool.forEach(r => {
+           const p = r.ppd || 'TIADA MAKLUMAT';
+           if (!ppdGroups[p]) ppdGroups[p] = { name: p, total: 0, c7: 0, c6: 0 };
+           ppdGroups[p].total++;
+           if (r.kohort === COHORT_NAMES.C7) ppdGroups[p].c7++;
+           if (r.kohort === COHORT_NAMES.C6) ppdGroups[p].c6++;
+        });
 
         return { 
           total: pool.length, 
-          cBar: [{name:'6+ (7 Thn)', filterKey: COHORT_NAMES.C7, value:c7}, {name:'5+ (6 Thn)', filterKey: COHORT_NAMES.C6, value:c6}], 
-          genderData: [{name:'Lelaki', value:male}, {name:'Perempuan', value:female}], 
-          sBar: [{name:'SK', value:sk}, {name:'SJKC', value:sjkc}], 
-          ppdList: Object.values(ppdMap).sort((a,b)=>b.total-a.total) 
+          activePPDs: Object.keys(ppdDataMap).filter(k => ppdDataMap[k].length > 0).length,
+          cBar: [{name:'6+ (7 Thn)', value:c7, color:THEME.chartColors[1]}, {name:'5+ (6 Thn)', value:c6, color:THEME.chartColors[0]}], 
+          genderData: [{name:'Lelaki', value:male, color:THEME.chartColors[3]}, {name:'Perempuan', value:female, color:THEME.chartColors[5]}], 
+          ppdList: Object.values(ppdGroups).sort((a,b) => b.total - a.total)
         };
-      }, [data, selectedPPD]);
+      }, [allDataUnique, selectedPPD, ppdDataMap]);
 
-      const drillDownSummary = useMemo(() => {
-        if (!cardFilter) return null;
-        const pool = selectedPPD === 'SEMUA PPD' ? data : data.filter(d => d.ppd.includes(selectedPPD));
-        const groups = {};
-        pool.filter(d => d.kohort === cardFilter).forEach(row => {
-          if (!groups[row.ppd]) groups[row.ppd] = { ppd: row.ppd, total: 0, sk: 0, sjkc: 0 };
-          groups[row.ppd].total++;
-          if (row.jenisSekolah === 'SK') groups[row.ppd].sk++; else if (row.jenisSekolah === 'SJKC') groups[row.ppd].sjkc++;
-        });
-        return Object.values(groups).sort((a,b)=>b.total-a.total);
-      }, [data, cardFilter, selectedPPD]);
-
-      const ppdSubmissionStatus = useMemo(() => {
-        const uploaded = new Set(data.map(d => d.ppd));
-        return PPD_LIST.map(name => ({ name, uploaded: uploaded.has(name), count: data.filter(d => d.ppd === name).length }));
-      }, [data]);
+      if (loading) return (
+        <div className="min-h-screen flex items-center justify-center flex-col font-['Nunito']">
+          <div className="loader-spinner"></div>
+          <p className="mt-4 text-slate-400 font-bold text-[10px] uppercase tracking-widest italic">Menyegerakkan Data Sarawak...</p>
+        </div>
+      );
 
       return (
-        <div className="min-h-screen pb-10 animate-fade-in text-slate-800">
-          <header className="glass-header px-4 md:px-8 py-4 flex justify-between items-center no-print">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 md:w-11 md:h-11 bg-red-600 rounded-lg flex items-center justify-center text-white font-black text-sm shadow rotate-2 shrink-0">JPNS</div>
-              <div className="min-w-0">
-                <h1 className="text-base md:text-lg font-black text-slate-900 leading-none uppercase truncate tracking-tighter">Analisis Permohonan</h1>
-                <p className="text-[9px] md:text-[10px] font-bold text-slate-500 mt-1 uppercase tracking-widest">Sesi 2027 • Sarawak</p>
+        <div className="min-h-screen pb-10">
+          {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+
+          <header className="glass-header px-10 py-6 flex flex-col md:flex-row justify-between items-center gap-6 shadow-sm no-print">
+            <div className="flex items-center gap-6">
+              <div className="w-14 h-14 bg-gradient-to-br from-red-600 to-black rounded-2xl flex items-center justify-center text-white font-black text-xl shadow-xl rotate-2 shrink-0">JPNS</div>
+              <div>
+                <h1 className="text-xl md:text-2xl font-[900] text-slate-900 uppercase tracking-tighter leading-tight">Analisis Permohonan Tahun 1<br/><span className="text-xs md:text-sm font-bold text-slate-500 uppercase tracking-widest">Sesi Akademik 2027, Jabatan Pendidikan Negeri Sarawak</span></h1>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {loading && <div className="loader-spinner opacity-40 !w-4 !h-4 !border-2"></div>}
-              <button onClick={() => window.print()} className="bg-slate-900 text-white px-4 py-2 rounded-lg text-[10px] font-bold uppercase hover:bg-black transition-all shadow-sm">Cetak</button>
+            <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit font-black uppercase text-[10px]">
+               <button onClick={()=>setActiveTab('dashboard')} className={`px-8 py-3 rounded-[1.2rem] transition-all duration-300 ${activeTab==='dashboard'?'active-tab-btn':'text-slate-400 hover:text-slate-700'}`}>ANALISIS</button>
+               <button onClick={()=>setActiveTab('list')} className={`px-8 py-3 rounded-[1.2rem] transition-all duration-300 ${activeTab==='list'?'active-tab-btn':'text-slate-400 hover:text-slate-700'}`}>PENGURUSAN DATA</button>
+               <button onClick={()=>setActiveTab('info')} className={`px-8 py-3 rounded-[1.2rem] transition-all duration-300 ${activeTab==='info'?'active-tab-btn':'text-slate-400 hover:text-slate-700'}`}>INFO SISTEM</button>
             </div>
           </header>
 
-          <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 space-y-6 flex-1">
-            <nav className="flex flex-col md:flex-row gap-3 p-1 bg-white rounded-xl shadow-sm border no-print">
-              <div className="flex bg-slate-100 p-1 rounded-lg w-full md:w-auto">
-                <button onClick={() => setActiveTab('dashboard')} className={`flex-1 py-1.5 px-4 text-[10px] font-bold rounded-md transition-all ${activeTab==='dashboard'?'bg-white shadow text-red-600':'text-slate-400'}`}>DASHBOARD</button>
-                <button onClick={() => setActiveTab('list')} className={`flex-1 py-1.5 px-4 text-[10px] font-bold rounded-md transition-all ${activeTab==='list'?'bg-white shadow text-red-600':'text-slate-400'}`}>MUAT NAIK</button>
-                <button onClick={() => setActiveTab('info')} className={`flex-1 py-1.5 px-4 text-[10px] font-bold rounded-md transition-all ${activeTab==='info'?'bg-white shadow text-red-600':'text-slate-400'}`}>STATUS PPD</button>
-              </div>
-              <div className="relative w-full md:w-64 ml-auto">
-                <select value={selectedPPD} onChange={(e) => setSelectedPPD(e.target.value)} className="w-full pl-3 pr-8 py-2 text-[10px] bg-slate-100 font-bold rounded-lg appearance-none outline-none">
-                  <option value="SEMUA PPD">SELURUH SARAWAK</option>
-                  {PPD_LIST.map(p => <option key={p} value={p}>{p}</option>)}
-                </select>
-              </div>
-            </nav>
-
+          <main className="max-w-7xl mx-auto px-6 py-8 space-y-12">
+            
             {activeTab === 'dashboard' && (
-              <Fragment>
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
-                  <StatCard title="Jumlah Permohonan" value={stats.total.toLocaleString()} icon={<Icons.FileText/>} gradient="bg-blue-600" onClick={()=>setCardFilter(null)} isActive={!cardFilter} />
-                  <StatCard title="Analisis Kohort" icon={<Icons.CheckCircle/>} gradient="bg-orange-500" onClick={() => setCardFilter(cardFilter ? null : COHORT_NAMES.C7)} isActive={!!cardFilter}>
-                    <MiniBarChart data={stats.cBar} colors={['#F59E0B', '#EF4444']} onBarClick={setCardFilter} />
-                  </StatCard>
-                  <StatCard title="Pecahan Jantina" icon={<Icons.Users/>} gradient="bg-indigo-600">
-                    <MiniBarChart data={stats.genderData} colors={['#3B82F6', '#EC4899']} />
-                  </StatCard>
-                  <StatCard title="Jenis Sekolah" icon={<Icons.School/>} gradient="bg-emerald-600">
-                    <MiniBarChart data={stats.sBar} colors={['#3B82F6', '#F59E0B']} />
-                  </StatCard>
+              <div className="space-y-12 animate-fade-in font-['Nunito']">
+                
+                {/* GRID STATISTIK UTAMA */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                   <div className="p-8 premium-card border-l-8 border-l-blue-600 bg-white flex flex-col justify-center">
+                      <div className="flex justify-between items-start mb-2">
+                        <p className="text-slate-400 text-[10px] font-black uppercase">Permohonan Unik</p>
+                        <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl shadow-sm"><Icons.FileText /></div>
+                      </div>
+                      <h3 className="text-5xl font-[900] text-slate-900 leading-none">{stats.total.toLocaleString()}</h3>
+                      <p className="mt-4 flex items-center gap-2 text-[10px] font-black text-blue-600 uppercase tracking-widest">
+                         Daerah Aktif: {stats.activePPDs}/30
+                      </p>
+                   </div>
+
+                   <div className="p-8 premium-card">
+                      <div className="flex justify-between items-start mb-4">
+                        <p className="text-slate-400 text-[10px] font-black uppercase">Analisis Kohort</p>
+                        <div className="p-3 bg-orange-50 text-orange-600 rounded-2xl shadow-sm"><Icons.Activity /></div>
+                      </div>
+                      <div className="h-32 chart-container no-print">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={stats.cBar} layout="vertical" margin={{right: 50, left: 10}}>
+                            <XAxis type="number" hide />
+                            <YAxis dataKey="name" type="category" width={80} tick={{fontSize: 10, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+                              {stats.cBar.map((e, i) => <Cell key={i} fill={e.color} />)}
+                              <LabelList dataKey="value" position="right" fontSize={11} fontWeight={900} fill="#1e293b" />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                   </div>
+
+                   <div className="p-8 premium-card">
+                      <div className="flex justify-between items-start mb-4">
+                        <p className="text-slate-400 text-[10px] font-black uppercase">Pecahan Jantina</p>
+                        <div className="p-3 bg-purple-50 text-purple-600 rounded-2xl shadow-sm"><Icons.Users /></div>
+                      </div>
+                      <div className="h-32 chart-container no-print">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <BarChart data={stats.genderData} layout="vertical" margin={{right: 50, left: 10}}>
+                            <XAxis type="number" hide />
+                            <YAxis dataKey="name" type="category" width={60} tick={{fontSize: 10, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                            <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={20}>
+                              {stats.genderData.map((e, i) => <Cell key={i} fill={e.color} />)}
+                              <LabelList dataKey="value" position="right" fontSize={11} fontWeight={900} fill="#1e293b" />
+                            </Bar>
+                          </BarChart>
+                        </ResponsiveContainer>
+                      </div>
+                   </div>
                 </div>
 
-                {cardFilter && drillDownSummary && (
-                  <div className="bg-red-50/50 p-4 md:p-6 rounded-2xl border border-red-100 animate-fade-in no-print">
-                      <div className="flex justify-between items-center mb-4 px-2">
-                         <h3 className="text-[10px] font-black uppercase text-red-700">Pecahan {cardFilter} mengikut PPD</h3>
-                         <button onClick={()=>setCardFilter(null)} className="text-red-500 hover:text-red-800"><Icons.XCircle /></button>
+                {/* JADUAL RUMUSAN PPD */}
+                <div className="premium-card">
+                   <div className="p-10 border-b bg-slate-50/50 flex flex-col md:flex-row justify-between items-center gap-6">
+                      <div className="flex items-center gap-4">
+                         <h3 className="text-sm font-black text-slate-900 uppercase tracking-widest">Rumusan Daerah Sarawak</h3>
+                         <select value={selectedPPD} onChange={(e)=>setSelectedPPD(e.target.value)} className="no-print pl-4 pr-10 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase tracking-widest shadow-sm outline-none focus:ring-2 focus:ring-red-500/20">
+                            <option value="SEMUA PPD">Filter PPD</option>
+                            {PPD_LIST.map(p => <option key={p} value={p}>{p}</option>)}
+                         </select>
                       </div>
-                      <div className="overflow-x-auto bg-white rounded-xl shadow-inner border max-h-60">
-                           <table className="min-w-full divide-y text-center text-[10px] font-bold uppercase">
-                             <thead className="bg-slate-50 sticky top-0 uppercase">
-                               <tr><th className="px-4 py-2 text-[9px] text-slate-500">PPD</th><th className="px-4 py-2 text-red-600">Jumlah</th><th className="px-4 py-2 text-blue-600">SK</th><th className="px-4 py-2 text-orange-600">SJKC</th></tr>
-                             </thead>
-                             <tbody className="divide-y divide-slate-50">
-                               {drillDownSummary.map(row => (<tr key={row.ppd} className="hover:bg-slate-50"><td className="px-4 py-2 text-slate-700">{row.ppd}</td><td className="px-4 py-2 text-red-600">{row.total}</td><td className="px-4 py-2 text-blue-600">{row.sk}</td><td className="px-4 py-2 text-orange-600">{row.sjkc}</td></tr>))}
-                             </tbody>
-                           </table>
+                      <div className="no-print relative w-full md:w-96 group">
+                         <Icons.Search className="absolute left-4 top-4 w-5 h-5 text-slate-400 group-focus-within:text-red-600 transition-colors"/>
+                         <input type="text" placeholder="Cari nama daerah..." value={searchQuery} onChange={(e)=>setSearchQuery(e.target.value)} className="w-full pl-12 pr-6 py-4 bg-white border border-slate-200 rounded-2xl text-xs font-black outline-none focus:ring-4 focus:ring-red-500/10 shadow-inner transition-all"/>
                       </div>
-                  </div>
-                )}
-
-                <div className="bg-white rounded-2xl shadow-sm border overflow-hidden">
-                  <div className="p-4 border-b bg-slate-50 flex justify-between items-center text-center">
-                    <h3 className="text-xs font-black uppercase text-slate-700">Bilangan Permohonan Mengikut PPD</h3>
-                    <span className="text-[9px] font-bold text-slate-400 uppercase">Klik Info untuk Pecahan</span>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="min-w-full divide-y text-center uppercase text-[10px] font-bold">
-                      <thead className="bg-white text-[9px] text-slate-400 font-black tracking-wider">
-                        <tr><th className="px-4 py-4">Bil</th><th className="px-4 py-4 text-left">Nama PPD</th><th className="px-4 py-4 text-red-500">Jumlah</th><th className="px-4 py-4">6+ (7 Thn)</th><th className="px-4 py-4">5+ (6 Thn)</th><th className="px-4 py-4 text-slate-300">Luar</th></tr>
-                      </thead>
-                      <tbody className="bg-white divide-y">
-                        {stats.ppdList.map((p, i) => (
-                          <Fragment key={p.name}>
-                            <tr className="hover:bg-slate-50 transition-colors">
-                              <td className="px-4 py-3 text-slate-300">{i+1}</td>
-                              <td className="px-4 py-3 text-left text-slate-700 font-black">{p.name}</td>
-                              <td className="px-4 py-3 text-red-600">{p.total}</td>
-                              <td className="px-4 py-3 text-slate-600 cursor-pointer hover:bg-blue-50" onClick={() => setExpandedCell(expandedCell?.ppd === p.name && expandedCell?.cohort === 'C7' ? null : {ppd: p.name, cohort: 'C7'})}>
-                                <div className="flex items-center justify-center gap-1">{p.c7} <Icons.Info /></div>
-                              </td>
-                              <td className="px-4 py-3 text-slate-600 cursor-pointer hover:bg-blue-50" onClick={() => setExpandedCell(expandedCell?.ppd === p.name && expandedCell?.cohort === 'C6' ? null : {ppd: p.name, cohort: 'C6'})}>
-                                <div className="flex items-center justify-center gap-1">{p.c6} <Icons.Info /></div>
-                              </td>
-                              <td className="px-4 py-3 text-slate-400">{p.total - p.c7 - p.c6}</td>
-                            </tr>
-                            {expandedCell?.ppd === p.name && (
-                              <tr className="bg-blue-50/40 animate-fade-in font-black text-[9px]">
-                                <td colSpan="6" className="px-4 py-2 border-t border-blue-100">
-                                  <div className="flex justify-center gap-6">
-                                    <span className="text-slate-600 uppercase">Pecahan {expandedCell.cohort === 'C7' ? '6+ (7 Thn)' : '5+ (6 Thn)'}:</span>
-                                    <span className="text-blue-600">SK: {expandedCell.cohort === 'C7' ? p.c7_sk : p.c6_sk}</span>
-                                    <span className="text-orange-600">SJKC: {expandedCell.cohort === 'C7' ? p.c7_sjkc : p.c6_sjkc}</span>
-                                    <span className="text-slate-400 font-normal text-center">Lain: {expandedCell.cohort === 'C7' ? p.c7_lain : p.c6_lain}</span>
-                                  </div>
-                                </td>
-                              </tr>
-                            )}
-                          </Fragment>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                   </div>
+                   <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-slate-100 text-center uppercase font-black">
+                         <thead className="bg-slate-50 font-black">
+                           <tr>
+                             <th className="px-8 py-6 text-[11px] text-slate-400 tracking-widest">Bil</th>
+                             <th className="px-8 py-6 text-[11px] text-slate-400 tracking-widest text-left">PPD</th>
+                             <th className="px-8 py-6 text-[11px] text-red-500 tracking-widest bg-red-50/50">Jumlah</th>
+                             <th className="px-8 py-6 text-[11px] text-slate-400 tracking-widest">6+ (7 Thn)</th>
+                             <th className="px-8 py-6 text-[11px] text-slate-400 tracking-widest">5+ (6 Thn)</th>
+                           </tr>
+                         </thead>
+                         <tbody className="divide-y divide-slate-100 bg-white">
+                            {stats.ppdList.filter(p=>p.name.includes(searchQuery.toUpperCase())).map((p, i)=>(
+                               <tr key={p.name} className="hover:bg-slate-50 transition-all group">
+                                  <td className="px-8 py-6 text-xs text-slate-300 font-bold">{i+1}</td>
+                                  <td className="px-8 py-6 text-xs text-slate-800 text-left font-black">{p.name}</td>
+                                  <td className="px-8 py-6 text-xs text-red-600 font-[900]">{p.total}</td>
+                                  <td className="px-8 py-6 text-xs text-slate-600 font-bold">{p.c7}</td>
+                                  <td className="px-8 py-6 text-xs text-slate-600 font-bold">{p.c6}</td>
+                               </tr>
+                            ))}
+                         </tbody>
+                      </table>
+                   </div>
                 </div>
-              </Fragment>
+              </div>
             )}
 
             {activeTab === 'list' && (
-              <div className="max-w-xl mx-auto space-y-6 animate-fade-in no-print text-center">
-                <div className="bg-white p-12 rounded-[3rem] shadow border flex flex-col items-center">
-                  <div className="w-16 h-16 bg-red-50 text-red-600 rounded-full flex items-center justify-center mb-6"><Icons.Upload /></div>
-                  <h3 className="text-lg font-black text-slate-900 mb-2 uppercase tracking-tight">Muat Naik Data PPD</h3>
-                  <p className="text-xs text-slate-400 mb-8 font-bold">Data baharu akan digabungkan ke sistem berpusat Sarawak.</p>
-                  <select value={manualPPD} onChange={(e)=>setManualPPD(e.target.value)} className="w-full px-6 py-4 bg-slate-50 border rounded-2xl text-xs font-black mb-6 outline-none focus:ring-1 focus:ring-red-400 text-center uppercase tracking-widest text-slate-700">
-                    <option value="">-- PILIH PPD ANDA --</option>
-                    {PPD_LIST.map(p => <option key={p} value={p}>PPD {p}</option>)}
-                  </select>
-                  <label className="w-full bg-slate-900 text-white py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest cursor-pointer hover:bg-black transition-all shadow-md">
-                     Pilih Fail (.XLSX / .CSV)
-                     <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={(e) => { 
-                        if (!manualPPD) { alert("Sila pilih PPD anda terlebih dahulu."); return; }
-                        handleFileUpload(e); 
-                     }} />
-                  </label>
+              <div className="max-w-4xl mx-auto space-y-10 animate-fade-in no-print text-center font-['Nunito']">
+                <div className="bg-white p-12 rounded-[4rem] shadow-xl border border-slate-100">
+                  <div className="mb-10 max-w-sm mx-auto font-['Nunito']">
+                    <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Langkah 1: Pilih PPD Utama</label>
+                    <select value={manualPPD} onChange={(e)=>setManualPPD(e.target.value)} className="w-full px-8 py-4 bg-slate-50 border-2 border-slate-100 rounded-[1.5rem] text-xs font-black outline-none focus:border-red-500 transition-all text-center shadow-inner font-black uppercase tracking-widest"><option value="">-- SILAH PILIH DAERAH --</option>{PPD_LIST.map(p => <option key={p} value={p}>PPD {p}</option>)}</select>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                    <label className="bg-slate-900 text-white py-6 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.3em] cursor-pointer hover:bg-black transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95 btn-action">
+                      <Icons.Upload /> Muat Naik Fail
+                      <input type="file" accept=".csv,.xlsx,.xls" className="hidden" onChange={handleFileUpload} />
+                    </label>
+                    
+                    <button onClick={handleDownloadCSV} disabled={!allDataUnique.length} className="bg-blue-600 text-white py-6 rounded-[2rem] font-black uppercase text-[10px] tracking-[0.3em] hover:bg-blue-700 transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95 disabled:opacity-30 btn-action">
+                      <Icons.Download /> Muat Turun CSV
+                    </button>
+                  </div>
+
+                  <div className="flex flex-col gap-4 items-center pt-8 border-t border-slate-100">
+                    <button onClick={handleDeletePPDData} disabled={!manualPPD} className="w-full max-w-sm bg-red-50 text-red-600 py-4 rounded-2xl font-black uppercase text-[10px] tracking-widest hover:bg-red-100 transition-all border border-red-100 flex items-center justify-center gap-2 disabled:opacity-20 btn-action font-black">
+                       <Icons.Trash /> Padam Data PPD {manualPPD}
+                    </button>
+                    <p className="text-[9px] text-slate-400 font-black uppercase tracking-widest mt-4 leading-relaxed">
+                       Sistem menggunakan No. MyKid unik. Sebarang permohonan murid yang sama <br/> merentas fail yang berbeza akan digabungkan secara automatik.
+                    </p>
+                  </div>
                 </div>
-                {data.length > 0 && <button onClick={async () => { if(confirm("Hapus semua data Sarawak secara kekal?")) { await firebase.firestore().collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc('master').set({ rows: [] }); setData([]); } }} className="text-[10px] font-bold text-red-600 opacity-60 hover:opacity-100 transition-opacity">Padam Seluruh Data Awan</button>}
               </div>
             )}
 
             {activeTab === 'info' && (
-              <div className="space-y-6 animate-fade-in no-print">
-                <div className="premium-card p-10">
-                  <h2 className="text-xl font-black text-slate-900 uppercase mb-8 border-b pb-4 tracking-tighter text-center">Status Muat Naik PPD Sarawak</h2>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {ppdSubmissionStatus.map(ppd => (
-                      <div key={ppd.name} className={`p-4 rounded-2xl border text-center transition-all ${ppd.uploaded ? 'bg-emerald-50 border-emerald-100' : 'bg-slate-50 border-slate-100 opacity-60'}`}>
-                        <p className="text-[10px] font-black text-slate-800 uppercase leading-tight mb-1">{ppd.name}</p>
-                        {ppd.uploaded ? <span className="text-[9px] font-bold text-emerald-600 flex items-center justify-center gap-1"><Icons.Globe className="w-3 h-3"/> {ppd.count} Data</span> : <span className="text-[9px] font-bold text-slate-400 uppercase">Tiada</span>}
-                      </div>
-                    ))}
-                  </div>
-                </div>
+              <div className="max-w-4xl mx-auto space-y-8 animate-fade-in text-left font-['Nunito']">
+                 <div className="premium-card p-10 space-y-10 font-black uppercase text-[10px]">
+                    <div className="flex items-center gap-4 border-b border-slate-100 pb-8">
+                       <div className="p-4 bg-blue-50 text-blue-600 rounded-3xl"><Icons.Info className="w-8 h-8"/></div>
+                       <h2 className="text-2xl font-black text-slate-900 tracking-tighter">Info & Kawalan Sistem</h2>
+                    </div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-12 font-black">
+                       <div className="space-y-8">
+                          <div>
+                             <h4 className="text-slate-800 mb-3 text-xs tracking-wide">1. Konsolidasi Data (Unique)</h4>
+                             <p className="text-slate-500 font-bold leading-relaxed text-[11px]">Sistem menggabungkan semua dokumen daripada setiap PPD. Jumlah unik murid (Identity-Based) digunakan sebagai metrik utama. Ini bermakna jika data murid yang sama dimasukkan dua kali merentas fail yang berbeza, ia hanya akan dikira sekali sahaja bagi memastikan ketepatan permohonan negeri.</p>
+                          </div>
+                          <div>
+                             <h4 className="text-slate-800 mb-3 text-xs tracking-wide">2. Penyimpanan Awan Sarawak</h4>
+                             <p className="text-slate-500 font-bold leading-relaxed text-[11px]">Setiap PPD mempunyai ruang storan berasingan di bawah pangkalan data Firestore. Ini menyelesaikan isu ralat 1MB Firebase secara kekal, membolehkan puluhan ribu rekod diproses serentak tanpa menjejaskan prestasi sistem.</p>
+                          </div>
+                       </div>
+                       <div className="space-y-8 font-black">
+                          <div>
+                             <h4 className="text-slate-800 mb-3 text-xs tracking-wide">3. Kriteria Kohort 2027</h4>
+                             <p className="text-slate-500 font-bold leading-relaxed text-[11px]">Kriteria kohort umur dikira mengikut standard KPM bagi tahun sesi akademik 2027 melalui No. MyKid murid:<br/>• 7 Tahun: Lahir 02/01/2020 - 01/01/2021<br/>• 6 Tahun: Lahir 02/01/2021 - 01/01/2022</p>
+                          </div>
+                          <div>
+                             <h4 className="text-slate-800 mb-3 text-xs tracking-wide">4. Pengurusan PPD Berpusat</h4>
+                             <p className="text-slate-500 font-bold leading-relaxed text-[11px]">Fungsi muat turun (CSV) membolehkan pentadbir menyimpan salinan unik bagi seluruh negeri. PPD juga boleh mengemaskini atau memadam data khusus daerah mereka secara bebas di tab Pengurusan Data.</p>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
               </div>
             )}
           </main>
@@ -470,11 +544,9 @@
       );
     };
 
-    const rootElement = document.getElementById('root');
-    if (rootElement) {
-      const root = ReactDOM.createRoot(rootElement);
-      root.render(<App />);
-    }
+    const container = document.getElementById('root');
+    const root = ReactDOM.createRoot(container);
+    root.render(<App />);
   </script>
 </body>
 </html>
