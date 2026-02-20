@@ -96,7 +96,6 @@
       .overflow-x-auto, .overflow-hidden { overflow: visible !important; }
       table { width: 100%; border-collapse: collapse; font-size: 10pt; }
       th, td { border: 1px solid #000 !important; padding: 8px !important; text-align: center; }
-      .action-col { display: none !important; }
       .chart-container { display: none !important; }
     }
   </style>
@@ -596,14 +595,13 @@
                             <th rowSpan="2" className="text-left border-r border-b px-4 sm:px-6 py-4 text-slate-600 tracking-wider min-w-[140px]">Nama PPD</th>
                             <th rowSpan="2" className="bg-slate-100/50 border-r border-b px-4 sm:px-6 py-4 text-slate-900 tracking-wider">Jumlah</th>
                             <th colSpan="3" className="bg-indigo-50/50 border-b border-r px-4 sm:px-6 py-3 text-indigo-800 tracking-wider font-black">Kohort 7 Thn (6+)</th>
-                            <th colSpan="3" className="bg-orange-50/50 border-b border-r px-4 sm:px-6 py-3 text-orange-800 tracking-wider font-black">Kohort 6 Thn (5+)</th>
-                            <th rowSpan="2" className="border-b px-4 sm:px-6 py-4 text-slate-500 tracking-wider action-col">Tindakan</th>
+                            <th colSpan="3" className="bg-orange-50/50 border-b px-4 sm:px-6 py-3 text-orange-800 tracking-wider font-black">Kohort 6 Thn (5+)</th>
                           </tr>
                           <tr className="bg-slate-50/50 text-slate-600">
                              <th className="border-r border-b py-3 px-3 sm:px-4">L</th><th className="border-r border-b py-3 px-3 sm:px-4">P</th>
                              <th className="border-r border-b py-3 px-3 sm:px-4 text-indigo-700 bg-indigo-50/50 font-black">Jum</th>
                              <th className="border-r border-b py-3 px-3 sm:px-4">L</th><th className="border-r border-b py-3 px-3 sm:px-4">P</th>
-                             <th className="border-r border-b py-3 px-3 sm:px-4 text-orange-700 bg-orange-50/50 font-black">Jum</th>
+                             <th className="border-b py-3 px-3 sm:px-4 text-orange-700 bg-orange-50/50 font-black">Jum</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100 text-xs sm:text-sm font-bold">
@@ -615,17 +613,12 @@
                               <td className="text-blue-600 border-r py-3 sm:py-4">{p.c7_l}</td><td className="text-pink-600 border-r py-3 sm:py-4">{p.c7_p}</td>
                               <td className="text-indigo-700 border-r py-3 sm:py-4 font-black bg-indigo-50/30">{p.c7_l + p.c7_p}</td>
                               <td className="text-blue-600 border-r py-3 sm:py-4">{p.c6_l}</td><td className="text-pink-600 border-r py-3 sm:py-4">{p.c6_p}</td>
-                              <td className="text-orange-700 border-r py-3 sm:py-4 font-black bg-orange-50/30">{p.c6_l + p.c6_p}</td>
-                              <td className="py-3 sm:py-4 action-col">
-                                <button onClick={() => setDeleteConfirm({ show: true, ppd: p.name })} className="p-2 sm:p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95 group mx-auto block">
-                                  <Icons.Trash2 className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
-                                </button>
-                              </td>
+                              <td className="text-orange-700 py-3 sm:py-4 font-black bg-orange-50/30">{p.c6_l + p.c6_p}</td>
                             </tr>
                           ))}
                           {filteredPPDList.length === 0 && (
                             <tr>
-                               <td colSpan="10" className="py-8 text-sm font-bold text-slate-400">Tiada rekod padanan ditemui</td>
+                               <td colSpan="9" className="py-8 text-sm font-bold text-slate-400">Tiada rekod padanan ditemui</td>
                             </tr>
                           )}
                         </tbody>
@@ -658,14 +651,17 @@
                       <button onClick={handleDownloadCSV} className="bg-slate-900 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg">
                         <Icons.Download className="w-5 h-5"/> Muat Turun CSV
                       </button>
-                      <button onClick={() => setResetConfirm(true)} className="bg-red-50 text-red-600 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center gap-3 leading-none font-black">
-                        <Icons.Trash2 className="w-5 h-5"/> Padam Semua Data
+                      <button onClick={() => setDeleteConfirm({ show: true, ppd: manualPPD })} disabled={!manualPPD} className={`py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest transition-all flex items-center justify-center gap-3 leading-none ${manualPPD ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' : 'bg-slate-50 text-slate-400 border border-slate-200 cursor-not-allowed'}`}>
+                        <Icons.Trash2 className="w-5 h-5"/> Padam {manualPPD ? `${manualPPD}` : 'Daerah'}
                       </button>
                     </div>
 
-                    <div className="pt-2 sm:pt-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-2 sm:pt-4">
                        <button onClick={() => setCleanupConfirm(true)} className="w-full py-3 sm:py-4 bg-orange-50 text-orange-700 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-orange-100 border border-orange-200 transition-all flex items-center justify-center gap-2 leading-none">
                          <Icons.ShieldAlert className="w-5 h-5"/> Bersihkan Rekod Tidak Sah
+                       </button>
+                       <button onClick={() => setResetConfirm(true)} className="w-full py-3 sm:py-4 bg-red-600 text-white rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-red-700 transition-all shadow-lg shadow-red-200 flex items-center justify-center gap-2 leading-none">
+                         <Icons.Trash2 className="w-5 h-5"/> Padam Semua Data
                        </button>
                     </div>
                   </div>
