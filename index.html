@@ -2,7 +2,7 @@
 <html lang="ms">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Analisis Permohonan Tahun 1 Sesi Akademik Tahun 2027, JPNS</title>
   
   <!-- Tailwind CSS -->
@@ -32,11 +32,14 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
     
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
     ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
     
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
     body { 
       background-color: #f8fafc;
       background-image: 
@@ -46,6 +49,7 @@
       color: #1e293b;
       overflow-x: hidden;
       min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
     }
 
     .premium-card {
@@ -76,8 +80,8 @@
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     
     .active-tab-btn {
-      background: #0f172a;
-      color: white;
+      background: #0f172a !important;
+      color: white !important;
       box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
     }
 
@@ -93,6 +97,7 @@
       table { width: 100%; border-collapse: collapse; font-size: 10pt; }
       th, td { border: 1px solid #000 !important; padding: 8px !important; text-align: center; }
       .action-col { display: none !important; }
+      .chart-container { display: none !important; }
     }
   </style>
 </head>
@@ -135,8 +140,8 @@
         "BARAM", "BAU", "BELAGA", "BETONG", "BINTULU", "DALAT", "DARO", 
         "JULAU", "KANOWIT", "KAPIT", "KUCHING", "LAWAS", "LIMBANG", 
         "LUBOK ANTU", "LUNDU", "MERADONG", "MIRI", "MUKAH", "PADAWAN", 
-        "SAMARAHAN", "SARATOK", "SARIKEI", "SEBAUH", "SELANGAU", "SERIAN", "SIBU", 
-        "SIMUNJAN", "SONG", "SRI AMAN", "SUBIS"
+        "SAMARAHAN", "SARATOK", "SARIKEI", "SELANGAU", "SERIAN", "SIBU", 
+        "SIMUNJAN", "SONG", "SRI AMAN", "SUBIS", "TATAU/SEBAUH"
       ].sort();
 
       const firebaseConfig = {
@@ -174,22 +179,22 @@
       };
 
       const StatCard = ({ title, value, icon: IconComponent, colorClass }) => (
-        <div className={`premium-card p-6 flex flex-col justify-center text-left border-l-8 ${colorClass}`}>
+        <div className={`premium-card p-6 md:p-8 flex flex-col justify-center text-left border-l-8 ${colorClass}`}>
           <div className="flex justify-between items-center mb-4">
-            <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">{title}</p>
-            <div className="p-2.5 rounded-xl bg-slate-50 text-slate-700">
-              <IconComponent className="w-5 h-5" />
+            <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider">{title}</p>
+            <div className="p-3 bg-slate-50 text-slate-700 rounded-2xl shadow-sm">
+              <IconComponent className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
           </div>
-          <h3 className="text-4xl font-extrabold text-slate-900 tracking-tight">{value}</h3>
+          <h3 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-slate-900 tracking-tight">{value}</h3>
         </div>
       );
 
       const Toast = ({ message, type, onClose }) => {
         useEffect(() => { const timer = setTimeout(onClose, 5000); return () => clearTimeout(timer); }, [onClose]);
         return (
-          <div className="fixed top-6 right-6 z-[200] animate-fade-in font-['Plus Jakarta Sans'] no-print">
-            <div className={`flex items-center gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 ${type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'}`}>
+          <div className="fixed top-6 right-6 z-[200] animate-fade-in font-['Plus Jakarta Sans'] no-print w-[90%] sm:w-auto max-w-md">
+            <div className={`flex items-center justify-center sm:justify-start gap-3 px-6 py-4 rounded-2xl shadow-2xl border-2 ${type === 'success' ? 'bg-emerald-600 border-emerald-500 text-white' : 'bg-red-600 border-red-500 text-white'}`}>
               <span className="text-sm font-bold tracking-tight text-center">{message}</span>
             </div>
           </div>
@@ -200,17 +205,17 @@
         if (!show) return null;
         return (
           <div className="fixed inset-0 z-[300] flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-8 text-center space-y-6">
+            <div className="bg-white rounded-3xl shadow-2xl w-full max-w-sm overflow-hidden p-6 sm:p-8 text-center space-y-6">
               <div className={`mx-auto w-16 h-16 rounded-full flex items-center justify-center ${type === 'danger' ? 'bg-red-50 text-red-600' : 'bg-orange-50 text-orange-600'}`}>
                 {type === 'danger' ? <Icons.Trash2 className="w-8 h-8"/> : <Icons.AlertTriangle className="w-8 h-8"/>}
               </div>
               <div className="space-y-2">
-                <h3 className="text-xl font-black text-slate-900 uppercase tracking-tight">{title}</h3>
-                <p className="text-sm text-slate-500 font-bold leading-relaxed">{message}</p>
+                <h3 className="text-lg sm:text-xl font-black text-slate-900 uppercase tracking-tight">{title}</h3>
+                <p className="text-xs sm:text-sm text-slate-500 font-bold leading-relaxed">{message}</p>
               </div>
-              <div className="flex gap-3">
-                <button onClick={onCancel} className="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs font-black uppercase tracking-widest transition-all">Batal</button>
-                <button onClick={onConfirm} className={`flex-1 py-3 text-white rounded-xl text-xs font-black uppercase tracking-widest transition-all shadow-lg ${type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 'bg-slate-900 hover:bg-black shadow-slate-200'}`}>{confirmText}</button>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button onClick={onCancel} className="w-full sm:flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all">Batal</button>
+                <button onClick={onConfirm} className={`w-full sm:flex-1 py-3 text-white rounded-xl text-xs sm:text-sm font-black uppercase tracking-widest transition-all shadow-lg ${type === 'danger' ? 'bg-red-600 hover:bg-red-700 shadow-red-200' : 'bg-slate-900 hover:bg-black shadow-slate-200'}`}>{confirmText}</button>
               </div>
             </div>
           </div>
@@ -287,6 +292,7 @@
                  }
                  let ppdName = r.ppd || 'SARAWAK';
                  ppdName = ppdName.toUpperCase().replace(/^PPD\s+/i, '').trim();
+                 if (ppdName === 'SEBAUH' || ppdName === 'TATAU') ppdName = 'TATAU/SEBAUH'; // Auto-normalize
                  merged.push({ ...r, icClean: key, jantina: jantinaClean, kohort: cohortClean, ppd: ppdName });
                }
              }
@@ -380,7 +386,10 @@
                 else if (dobInt >= COHORT_RANGES_INT.C6.start && dobInt <= COHORT_RANGES_INT.C6.end) coh = COHORT_NAMES.C6;
 
                 const gen = parseInt(icClean.substring(11, 12), 10) % 2 !== 0 ? 'Lelaki' : 'Perempuan';
-                rowsToUpload.push({ nama: name || 'TANPA NAMA', ppd: manualPPD, icFormatted: icRaw, icClean: icClean, jantina: gen, kohort: coh, tarikhLahir: `${dd}/${mm}/${fullYear}` });
+                let ppdName = (manualPPD || ppd || 'SARAWAK').toUpperCase().replace(/^PPD\s+/i, '').trim();
+                if (ppdName === 'SEBAUH' || ppdName === 'TATAU') ppdName = 'TATAU/SEBAUH'; // Auto-normalize
+
+                rowsToUpload.push({ nama: name || 'TANPA NAMA', ppd: ppdName, icFormatted: icRaw, icClean: icClean, jantina: gen, kohort: coh, tarikhLahir: `${dd}/${mm}/${fullYear}` });
                 existingIcs.add(icClean); added++;
             });
 
@@ -401,7 +410,8 @@
           const headers = ["PPD", "NAMA MURID", "NO MYKID", "TARIKH LAHIR", "JANTINA", "KOHORT"];
           const csvRows = allDataUnique.map(d => [d.ppd, d.nama, d.icClean, d.tarikhLahir, d.jantina, d.kohort]);
           const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...csvRows.map(r => r.join(","))].join("\n");
-          const link = document.createElement("a"); link.setAttribute("href", encodeURI(csvContent));
+          const link = document.createElement("a");
+          link.setAttribute("href", encodeURI(csvContent));
           link.setAttribute("download", "Analisis_Sarawak_2027.csv"); document.body.appendChild(link); link.click(); document.body.removeChild(link);
         };
 
@@ -443,9 +453,9 @@
         };
 
         if (loading && data.length === 0) return (
-            <div className="min-h-screen flex items-center justify-center flex-col animate-pulse">
+            <div className="min-h-screen flex items-center justify-center flex-col animate-pulse px-4">
               <div className="loader"></div>
-              <p className="mt-4 text-slate-500 font-black text-[10px] uppercase tracking-[0.3em] italic">Menyusun Data Sarawak...</p>
+              <p className="mt-4 text-slate-500 font-black text-xs sm:text-sm uppercase tracking-widest italic text-center">Menyusun Data Sarawak...</p>
             </div>
         );
 
@@ -478,87 +488,146 @@
               onCancel={() => setCleanupConfirm(false)}
             />
 
-            <header className="glass-header px-10 py-6 flex flex-col md:flex-row justify-between items-center gap-6 no-print">
-              <div className="flex items-center gap-6">
-                <div className="w-14 h-14 bg-red-600 text-white rounded-2xl flex items-center justify-center font-black text-xl shadow-lg">JPNS</div>
-                <div className="text-left"><h1 className="text-xl font-extrabold text-slate-900 leading-none uppercase">Analisis Permohonan Tahun 1</h1><p className="text-sm font-semibold text-slate-500 uppercase tracking-widest mt-2">Sarawak • Sesi 2027</p></div>
+            <header className="glass-header px-4 md:px-10 py-4 md:py-6 flex flex-col lg:flex-row justify-between items-center gap-4 lg:gap-6 no-print">
+              <div className="flex items-center gap-4 w-full lg:w-auto">
+                <div className="w-12 h-12 md:w-14 md:h-14 bg-red-600 text-white rounded-xl md:rounded-2xl flex items-center justify-center font-black text-lg md:text-xl shadow-lg shrink-0">JPNS</div>
+                <div className="text-left flex-1">
+                  <h1 className="text-lg md:text-xl font-extrabold text-slate-900 leading-tight uppercase">Analisis Permohonan Tahun 1</h1>
+                  <p className="text-xs md:text-sm font-semibold text-slate-500 uppercase tracking-widest mt-1">Sarawak • Sesi 2027</p>
+                </div>
               </div>
-              <div className="flex bg-slate-100 p-1.5 rounded-2xl w-fit font-black uppercase text-[10px]">
-                 <button onClick={()=>setActiveTab('dashboard')} className={`px-10 py-3 rounded-[1.2rem] transition-all ${activeTab==='dashboard'?'active-tab-btn':'text-slate-400'}`}>DASHBOARD</button>
-                 <button onClick={()=>setActiveTab('list')} className={`px-10 py-3 rounded-[1.2rem] transition-all ${activeTab==='list'?'active-tab-btn':'text-slate-400'}`}>PENGURUSAN DATA</button>
-                 <button onClick={()=>setActiveTab('info')} className={`px-10 py-3 rounded-[1.2rem] transition-all ${activeTab==='info'?'active-tab-btn':'text-slate-400'}`}>INFO SISTEM</button>
+              <div className="flex bg-slate-100 p-1.5 rounded-2xl w-full lg:w-fit font-black uppercase text-xs md:text-sm overflow-x-auto hide-scrollbar">
+                 <button onClick={()=>setActiveTab('dashboard')} className={`flex-1 lg:flex-none whitespace-nowrap px-6 py-3 rounded-[1.2rem] transition-all duration-300 ${activeTab==='dashboard'?'active-tab-btn':'text-slate-500 hover:text-slate-800'}`}>DASHBOARD</button>
+                 <button onClick={()=>setActiveTab('list')} className={`flex-1 lg:flex-none whitespace-nowrap px-6 py-3 rounded-[1.2rem] transition-all duration-300 ${activeTab==='list'?'active-tab-btn':'text-slate-500 hover:text-slate-800'}`}>PENGURUSAN</button>
+                 <button onClick={()=>setActiveTab('info')} className={`flex-1 lg:flex-none whitespace-nowrap px-6 py-3 rounded-[1.2rem] transition-all duration-300 ${activeTab==='info'?'active-tab-btn':'text-slate-500 hover:text-slate-800'}`}>INFO</button>
               </div>
-              <button onClick={()=>window.print()} className="flex items-center gap-2 bg-slate-100 px-6 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all shadow-sm"><Icons.Printer /> Cetak Laporan</button>
+              <button onClick={()=>window.print()} className="hidden lg:flex items-center gap-2 bg-slate-100 px-6 py-3 rounded-xl text-sm font-bold hover:bg-slate-200 transition-all shadow-sm whitespace-nowrap"><Icons.Printer /> Cetak</button>
             </header>
 
-            <main className="max-w-7xl mx-auto px-8 py-10 space-y-10 font-['Plus Jakarta Sans'] text-center">
+            <main className="max-w-7xl mx-auto px-4 md:px-8 py-6 md:py-10 space-y-8 md:space-y-10 font-['Plus Jakarta Sans'] text-center">
+              
               {activeTab === 'dashboard' && (
-                <div className="space-y-10 animate-fade-in">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="space-y-8 md:space-y-10 animate-fade-in">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
                     <StatCard title="Jumlah Permohonan" value={stats.total.toLocaleString()} icon={Icons.FileText} colorClass="border-l-slate-800" />
-                    <div className="premium-card p-6 flex flex-col h-full">
-                       <div className="flex justify-between items-center mb-6"><p className="text-sm font-bold text-slate-500 uppercase tracking-wider text-left">Analisis Kohort</p><div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.Users /></div></div>
-                       <div className="overflow-hidden rounded-xl border border-slate-100">
-                          <table className="min-w-full text-center text-[11px] font-bold uppercase tracking-tight">
-                             <thead className="bg-slate-50 text-slate-400 border-b">
-                                <tr><th className="px-4 py-3 border-r">Jantina</th><th className="px-4 py-3 border-r text-indigo-600">7 Tahun</th><th className="px-4 py-3 border-r text-orange-600">6 Tahun</th><th className="px-4 py-3 bg-slate-100 text-slate-900">Jumlah</th></tr>
+                    <div className="premium-card p-6 md:p-8 flex flex-col h-full">
+                       <div className="flex justify-between items-center mb-6">
+                          <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider text-left">Analisis Kohort</p>
+                          <div className="p-3 bg-slate-50 text-slate-700 rounded-2xl shadow-sm"><Icons.Users className="w-5 h-5" /></div>
+                       </div>
+                       <div className="overflow-x-auto rounded-xl border border-slate-100 pb-1">
+                          <table className="min-w-full text-center text-xs sm:text-sm font-bold uppercase tracking-tight">
+                             <thead className="bg-slate-50 text-slate-500">
+                                <tr>
+                                   <th className="px-3 sm:px-4 py-3 sm:py-4 border-r whitespace-nowrap">Jantina</th>
+                                   <th className="px-3 sm:px-4 py-3 sm:py-4 border-r text-indigo-600 whitespace-nowrap">7 Tahun</th>
+                                   <th className="px-3 sm:px-4 py-3 sm:py-4 border-r text-orange-600 whitespace-nowrap">6 Tahun</th>
+                                   <th className="px-3 sm:px-4 py-3 sm:py-4 bg-slate-100 text-slate-900 whitespace-nowrap">Jumlah</th>
+                                </tr>
                              </thead>
                              <tbody className="divide-y divide-slate-50">
-                                <tr className="hover:bg-slate-50/50"><td className="px-4 py-4 text-slate-800 border-r text-left">Lelaki</td><td className="px-4 py-4 border-r">{stats.cohortValues.c7_m}</td><td className="px-4 py-4 border-r">{stats.cohortValues.c6_m}</td><td className="px-4 py-4 bg-slate-50 text-blue-600 font-black">{stats.cohortValues.total_m}</td></tr>
-                                <tr className="hover:bg-slate-50/50"><td className="px-4 py-4 text-slate-800 border-r text-left">Perempuan</td><td className="px-4 py-4 border-r">{stats.cohortValues.c7_p}</td><td className="px-4 py-4 border-r">{stats.cohortValues.c6_p}</td><td className="px-4 py-4 bg-slate-50 text-pink-600 font-black">{stats.cohortValues.total_p}</td></tr>
-                                <tr className="bg-slate-100 font-black"><td className="px-4 py-4 text-slate-900 border-r text-left">Jumlah</td><td className="px-4 py-4 border-r">{stats.cohortValues.c7_total}</td><td className="px-4 py-4 border-r">{stats.cohortValues.c6_total}</td><td className="px-4 py-4 bg-slate-900 text-white font-black">{stats.cohortValues.grand_total}</td></tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 text-slate-800 border-r text-left">Lelaki</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 border-r">{stats.cohortValues.c7_m}</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 border-r">{stats.cohortValues.c6_m}</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 bg-slate-50 text-blue-600 font-black">{stats.cohortValues.total_m}</td>
+                                </tr>
+                                <tr className="hover:bg-slate-50/50">
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 text-slate-800 border-r text-left">Perempuan</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 border-r">{stats.cohortValues.c7_p}</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 border-r">{stats.cohortValues.c6_p}</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 bg-slate-50 text-pink-600 font-black">{stats.cohortValues.total_p}</td>
+                                </tr>
+                                <tr className="bg-slate-100 font-black">
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 text-slate-900 border-r text-left">Jumlah</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 border-r">{stats.cohortValues.c7_total}</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 border-r">{stats.cohortValues.c6_total}</td>
+                                  <td className="px-3 sm:px-4 py-3 sm:py-4 bg-slate-900 text-white font-black">{stats.cohortValues.grand_total}</td>
+                                </tr>
                              </tbody>
                           </table>
                        </div>
                     </div>
-                    <div className="premium-card p-6 flex flex-col h-full"><div className="flex justify-between items-center mb-6"><p className="text-sm font-bold text-slate-500 uppercase tracking-wider text-left">Pecahan Jantina</p><div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.CheckCircle /></div></div><div className="h-40"><Chart.ResponsiveContainer width="100%" height="100%"><Chart.BarChart data={stats.genderData} margin={{top: 25, right: 10, left: 10, bottom: 0}}><Chart.CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0"/><Chart.XAxis dataKey="name" tick={{fontSize: 11, fontWeight: 600, fill: '#64748b'}} axisLine={false} tickLine={false} /><Chart.Bar dataKey="value" radius={[4,4,0,0]} barSize={32}>{stats.genderData.map((e, i) => <Chart.Cell key={i} fill={e.color} />)}<Chart.LabelList dataKey="value" position="top" fontSize={12} fontWeight={800} fill="#1e293b" /></Chart.Bar></Chart.BarChart></Chart.ResponsiveContainer></div></div>
+                    <div className="premium-card p-6 md:p-8 flex flex-col h-full">
+                       <div className="flex justify-between items-center mb-6">
+                          <p className="text-xs sm:text-sm font-bold text-slate-500 uppercase tracking-wider text-left">Pecahan Jantina</p>
+                          <div className="p-3 bg-slate-50 text-slate-700 rounded-2xl shadow-sm"><Icons.CheckCircle className="w-5 h-5"/></div>
+                       </div>
+                       <div className="h-48 md:h-56 chart-container no-print">
+                         <Chart.ResponsiveContainer width="100%" height="100%">
+                            <Chart.BarChart data={stats.genderData} margin={{top: 20, right: 20, left: -20, bottom: 0}}>
+                               <Chart.CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0"/>
+                               <Chart.XAxis dataKey="name" tick={{fontSize: 12, fontWeight: 600, fill: '#64748b'}} axisLine={false} tickLine={false} />
+                               <Chart.Bar dataKey="value" radius={[6,6,0,0]} barSize={40}>
+                                  {stats.genderData.map((e, i) => <Chart.Cell key={i} fill={e.color} />)}
+                                  <Chart.LabelList dataKey="value" position="top" fontSize={14} fontWeight={800} fill="#1e293b" />
+                               </Chart.Bar>
+                            </Chart.BarChart>
+                         </Chart.ResponsiveContainer>
+                       </div>
+                    </div>
                   </div>
 
                   <div className="premium-card overflow-hidden bg-white">
-                    <div className="p-8 border-b flex flex-col md:flex-row justify-between items-center gap-6 bg-slate-50/50 no-print">
-                      <div className="text-left w-full md:w-auto"><h3 className="text-base font-extrabold text-slate-900 uppercase tracking-widest">Rumusan Per Daerah Sarawak</h3><p className="text-xs font-semibold text-slate-500 mt-1 uppercase">Pecahan Bilangan Murid Mengikut Kohort</p></div>
-                      <div className="flex flex-col md:flex-row gap-3 w-full md:w-auto items-center font-black">
-                         <button onClick={handleCopyTable} className="px-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm uppercase tracking-widest leading-none"><Icons.Copy className="w-4 h-4" /> Salin Jadual</button>
-                         <div className="relative w-full md:w-64">
-                            <Icons.Search className="absolute left-3 top-2.5 w-4 h-4 text-slate-400" /><input type="text" placeholder="Cari Daerah PPD..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} className="w-full pl-10 pr-4 py-2.5 bg-white border border-slate-200 rounded-xl text-[10px] font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-800 transition-all shadow-sm uppercase" />
+                    <div className="p-6 md:p-8 border-b flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-slate-50/50 no-print">
+                      <div className="text-left w-full lg:w-auto">
+                        <h3 className="text-base md:text-lg font-extrabold text-slate-900 uppercase tracking-widest">Rumusan Per Daerah</h3>
+                        <p className="text-xs sm:text-sm font-semibold text-slate-500 mt-1 uppercase">Pecahan Mengikut Kohort Umur</p>
+                      </div>
+                      <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto items-center font-black">
+                         <button onClick={handleCopyTable} className="w-full sm:w-auto px-6 py-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-700 hover:bg-slate-50 hover:text-blue-600 transition-all shadow-sm uppercase tracking-widest flex items-center justify-center gap-2"><Icons.Copy className="w-4 h-4" /> Salin Jadual</button>
+                         <div className="relative w-full sm:w-72">
+                            <Icons.Search className="absolute left-4 top-3.5 w-4 h-4 text-slate-400" />
+                            <input 
+                              type="text" 
+                              placeholder="Cari Daerah PPD..." 
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              className="w-full pl-10 pr-4 py-3 bg-white border border-slate-200 rounded-xl text-xs sm:text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-slate-800 transition-all shadow-sm uppercase"
+                            />
                          </div>
                       </div>
                     </div>
-                    <div className="overflow-x-auto">
-                      <table className="min-w-full text-center uppercase font-bold text-[10px]">
+                    <div className="overflow-x-auto pb-2">
+                      <table className="min-w-full text-center uppercase font-bold text-xs sm:text-sm">
                         <thead>
                           <tr>
-                            <th rowSpan="2" className="border-r border-b px-4 py-4 text-slate-400 tracking-wider">Bil</th>
-                            <th rowSpan="2" className="text-left border-r border-b px-6 py-4 text-slate-500 tracking-wider w-1/4">Nama PPD</th>
-                            <th rowSpan="2" className="bg-slate-100/50 border-r border-b px-6 py-4 text-slate-900 tracking-wider">Jumlah</th>
-                            <th colSpan="3" className="bg-orange-50/50 border-b border-r px-6 py-3 text-slate-600 tracking-wider font-black">Kohort 7 Thn (6+)</th>
-                            <th colSpan="3" className="bg-blue-50/50 border-b border-r px-6 py-3 text-slate-600 tracking-wider font-black">Kohort 6 Thn (5+)</th>
-                            <th rowSpan="2" className="border-b px-6 py-4 text-slate-400 tracking-wider action-col">Tindakan</th>
+                            <th rowSpan="2" className="border-r border-b px-3 sm:px-6 py-4 text-slate-500 tracking-wider">Bil</th>
+                            <th rowSpan="2" className="text-left border-r border-b px-4 sm:px-6 py-4 text-slate-600 tracking-wider min-w-[140px]">Nama PPD</th>
+                            <th rowSpan="2" className="bg-slate-100/50 border-r border-b px-4 sm:px-6 py-4 text-slate-900 tracking-wider">Jumlah</th>
+                            <th colSpan="3" className="bg-indigo-50/50 border-b border-r px-4 sm:px-6 py-3 text-indigo-800 tracking-wider font-black">Kohort 7 Thn (6+)</th>
+                            <th colSpan="3" className="bg-orange-50/50 border-b border-r px-4 sm:px-6 py-3 text-orange-800 tracking-wider font-black">Kohort 6 Thn (5+)</th>
+                            <th rowSpan="2" className="border-b px-4 sm:px-6 py-4 text-slate-500 tracking-wider action-col">Tindakan</th>
                           </tr>
-                          <tr className="bg-slate-50/30 text-slate-500">
-                             <th className="border-r border-b py-3 px-4">L</th><th className="border-r border-b py-3 px-4">P</th>
-                             <th className="border-r border-b py-3 px-4 text-orange-700 bg-orange-50/50 font-black">Jum</th>
-                             <th className="border-r border-b py-3 px-4">L</th><th className="border-r border-b py-3 px-4">P</th>
-                             <th className="border-r border-b py-3 px-4 text-blue-700 bg-blue-50/50 font-black">Jum</th>
+                          <tr className="bg-slate-50/50 text-slate-600">
+                             <th className="border-r border-b py-3 px-3 sm:px-4">L</th><th className="border-r border-b py-3 px-3 sm:px-4">P</th>
+                             <th className="border-r border-b py-3 px-3 sm:px-4 text-indigo-700 bg-indigo-50/50 font-black">Jum</th>
+                             <th className="border-r border-b py-3 px-3 sm:px-4">L</th><th className="border-r border-b py-3 px-3 sm:px-4">P</th>
+                             <th className="border-r border-b py-3 px-3 sm:px-4 text-orange-700 bg-orange-50/50 font-black">Jum</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-slate-100 text-[11px] font-bold">
+                        <tbody className="divide-y divide-slate-100 text-xs sm:text-sm font-bold">
                           {filteredPPDList.map((p, i) => (
                             <tr key={p.name} className="hover:bg-slate-50/80 transition-colors">
-                              <td className="text-slate-300 text-center border-r py-3.5">{i+1}</td>
-                              <td className="text-left text-slate-800 font-black border-r py-3.5 px-6">PPD {p.name}</td>
-                              <td className="bg-slate-50/30 text-slate-950 border-r font-black py-3.5 text-base">{p.total}</td>
-                              <td className="text-blue-600 border-r py-3.5">{p.c7_l}</td><td className="text-pink-600 border-r py-3.5">{p.c7_p}</td>
-                              <td className="text-orange-700 border-r py-3.5 font-black bg-orange-50/20">{p.c7_l + p.c7_p}</td>
-                              <td className="text-blue-600 border-r py-3.5">{p.c6_l}</td><td className="text-pink-600 border-r py-3.5">{p.c6_p}</td>
-                              <td className="text-blue-700 border-r py-3.5 font-black bg-blue-50/20">{p.c6_l + p.c6_p}</td>
-                              <td className="py-3.5 action-col">
-                                <button onClick={() => setDeleteConfirm({ show: true, ppd: p.name })} className="p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95 group">
-                                  <Icons.Trash2 className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                              <td className="text-slate-400 text-center border-r py-3 sm:py-4">{i+1}</td>
+                              <td className="text-left text-slate-800 font-black border-r py-3 sm:py-4 px-4 sm:px-6 whitespace-nowrap">PPD {p.name}</td>
+                              <td className="bg-slate-50/30 text-slate-950 border-r font-black py-3 sm:py-4 text-sm sm:text-base">{p.total}</td>
+                              <td className="text-blue-600 border-r py-3 sm:py-4">{p.c7_l}</td><td className="text-pink-600 border-r py-3 sm:py-4">{p.c7_p}</td>
+                              <td className="text-indigo-700 border-r py-3 sm:py-4 font-black bg-indigo-50/30">{p.c7_l + p.c7_p}</td>
+                              <td className="text-blue-600 border-r py-3 sm:py-4">{p.c6_l}</td><td className="text-pink-600 border-r py-3 sm:py-4">{p.c6_p}</td>
+                              <td className="text-orange-700 border-r py-3 sm:py-4 font-black bg-orange-50/30">{p.c6_l + p.c6_p}</td>
+                              <td className="py-3 sm:py-4 action-col">
+                                <button onClick={() => setDeleteConfirm({ show: true, ppd: p.name })} className="p-2 sm:p-2.5 bg-red-50 text-red-500 rounded-xl hover:bg-red-600 hover:text-white transition-all shadow-sm active:scale-95 group mx-auto block">
+                                  <Icons.Trash2 className="w-4 h-4 sm:w-5 sm:h-5 group-hover:scale-110 transition-transform" />
                                 </button>
                               </td>
                             </tr>
                           ))}
+                          {filteredPPDList.length === 0 && (
+                            <tr>
+                               <td colSpan="10" className="py-8 text-sm font-bold text-slate-400">Tiada rekod padanan ditemui</td>
+                            </tr>
+                          )}
                         </tbody>
                       </table>
                     </div>
@@ -567,36 +636,63 @@
               )}
 
               {activeTab === 'list' && (
-                <div className="max-w-3xl mx-auto space-y-10 no-print animate-fade-in uppercase font-black">
-                  <div className="premium-card p-12 text-center space-y-8">
-                    <div className="mb-8 w-full max-w-sm mx-auto font-bold uppercase">
-                      <label className="block text-[10px] font-bold text-slate-400 tracking-widest mb-3 uppercase leading-none">Langkah 1: Pilih PPD Utama</label>
-                      <select value={manualPPD} onChange={(e) => setManualPPD(e.target.value)} className="w-full px-6 py-4 bg-slate-50 text-xs font-black rounded-2xl border border-slate-200 outline-none focus:border-red-500 transition-all cursor-pointer text-center uppercase tracking-widest shadow-inner"><option value="">-- SILAH PILIH DAERAH PPD --</option>{PPD_LIST.map(p => <option key={p} value={p}>PPD {p}</option>)}</select>
+                <div className="max-w-3xl mx-auto space-y-8 md:space-y-10 no-print animate-fade-in uppercase font-black">
+                  <div className="premium-card p-6 md:p-12 text-center space-y-6 md:space-y-8">
+                    <div className="w-full max-w-sm mx-auto font-bold uppercase">
+                      <label className="block text-xs sm:text-sm font-bold text-slate-500 tracking-widest mb-3 leading-none">Langkah 1: Pilih PPD Utama</label>
+                      <select value={manualPPD} onChange={(e) => setManualPPD(e.target.value)} className="w-full px-4 sm:px-6 py-3 sm:py-4 bg-slate-50 text-sm sm:text-base font-black rounded-xl md:rounded-2xl border-2 border-slate-200 outline-none focus:border-red-500 transition-all cursor-pointer text-center uppercase tracking-widest shadow-inner">
+                        <option value="">-- SILA PILIH DAERAH PPD --</option>
+                        {PPD_LIST.map(p => <option key={p} value={p}>{p}</option>)}
+                      </select>
                     </div>
                     
-                    <div className={`relative group p-14 border-4 border-dashed rounded-[3rem] transition-all ${manualPPD ? 'border-slate-200 hover:bg-slate-50 cursor-pointer' : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'}`}>
+                    <div className={`relative group p-8 md:p-14 border-4 border-dashed rounded-[2rem] md:rounded-[3rem] transition-all ${manualPPD ? 'border-slate-300 hover:bg-slate-50 cursor-pointer' : 'border-slate-100 bg-slate-50 opacity-50 cursor-not-allowed'}`}>
                       {manualPPD && <input type="file" accept=".csv,.xlsx,.xls" onChange={(e)=>{ const file = e.target.files[0]; if (file) { const isExcel = file.name.endsWith('.xlsx') || file.name.endsWith('.xls'); const reader = new FileReader(); reader.onload = (ev) => { if(isExcel) { const workbook = XLSX.read(new Uint8Array(ev.target.result), {type:'array'}); const rows = XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]]); handleProcessData(rows, true); } else { handleProcessData(ev.target.result, false); } }; if(isExcel) reader.readAsArrayBuffer(file); else reader.readAsText(file); } }} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />}
-                      <div className="w-20 h-20 bg-slate-900 text-white rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl"><Icons.Upload /></div>
-                      <h3 className="text-xl font-black text-slate-900 leading-tight">MUAT NAIK FAIL DATA</h3>
-                      <p className="text-[10px] text-slate-400 font-bold tracking-[0.2em] mt-2 uppercase">Sokongan Fail: Excel (.xlsx) atau CSV</p>
-                      {!manualPPD && <p className="mt-4 text-red-500 text-[9px] font-black italic">! Sila Pilih PPD di atas terlebih dahulu</p>}
+                      <div className="w-16 h-16 md:w-20 md:h-20 bg-slate-900 text-white rounded-2xl md:rounded-3xl flex items-center justify-center mx-auto mb-4 md:mb-6 shadow-xl"><Icons.Upload className="w-6 h-6 md:w-8 md:h-8" /></div>
+                      <h3 className="text-lg md:text-xl font-black text-slate-900 leading-tight">MUAT NAIK FAIL DATA</h3>
+                      <p className="text-xs text-slate-400 font-bold tracking-widest mt-2 uppercase">Sokongan Fail: Excel (.xlsx) atau CSV</p>
+                      {!manualPPD && <p className="mt-4 text-red-500 text-[10px] md:text-xs font-black italic">! Sila Pilih PPD di atas terlebih dahulu</p>}
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 pt-10 border-t border-slate-100">
-                      <button onClick={handleDownloadCSV} className="bg-slate-900 text-white py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg"><Icons.Download /> Muat Turun CSV</button>
-                      <button onClick={() => setResetConfirm(true)} className="bg-red-50 text-red-600 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-widest hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center gap-3 leading-none font-black"><Icons.Trash2 /> Padam Semua Data</button>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 pt-6 md:pt-10 border-t border-slate-100">
+                      <button onClick={handleDownloadCSV} className="bg-slate-900 text-white py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-black transition-all flex items-center justify-center gap-3 shadow-lg">
+                        <Icons.Download className="w-5 h-5"/> Muat Turun CSV
+                      </button>
+                      <button onClick={() => setResetConfirm(true)} className="bg-red-50 text-red-600 py-3 sm:py-4 rounded-xl sm:rounded-2xl font-bold text-xs sm:text-sm uppercase tracking-widest hover:bg-red-100 transition-all border border-red-200 flex items-center justify-center gap-3 leading-none font-black">
+                        <Icons.Trash2 className="w-5 h-5"/> Padam Semua Data
+                      </button>
                     </div>
 
-                    <div className="pt-4">
-                       <button onClick={() => setCleanupConfirm(true)} className="w-full py-4 bg-orange-50 text-orange-700 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-orange-100 border border-orange-200 transition-all flex items-center justify-center gap-2 font-black leading-none"><Icons.ShieldAlert /> Bersihkan Rekod Tidak Sah</button>
+                    <div className="pt-2 sm:pt-4">
+                       <button onClick={() => setCleanupConfirm(true)} className="w-full py-3 sm:py-4 bg-orange-50 text-orange-700 rounded-xl sm:rounded-2xl font-black text-xs sm:text-sm uppercase tracking-widest hover:bg-orange-100 border border-orange-200 transition-all flex items-center justify-center gap-2 leading-none">
+                         <Icons.ShieldAlert className="w-5 h-5"/> Bersihkan Rekod Tidak Sah
+                       </button>
                     </div>
                   </div>
 
-                  <div className="premium-card p-10 bg-white text-left shadow-lg font-['Plus Jakarta Sans'] font-bold uppercase">
-                     <h3 className="text-sm font-bold text-slate-900 tracking-widest mb-8 border-b pb-4 flex items-center gap-3"><Icons.CheckCircle className="text-emerald-500 w-5 h-5"/> Status Penghantaran Data PPD</h3>
-                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                       <div><h4 className="text-[10px] font-bold text-emerald-600 uppercase mb-4 tracking-widest leading-none">Sudah Muat Naik ({sudahMuatNaik.length}/30)</h4><div className="grid grid-cols-2 gap-3">{sudahMuatNaik.map(p => (<div key={p} className="text-[9px] font-bold text-slate-700 bg-emerald-50 py-2.5 px-3 rounded-lg border border-emerald-100 flex justify-between items-center">{p} <Icons.CheckCircle className="w-3 h-3 text-emerald-500" /></div>))}</div></div>
-                       <div><h4 className="text-[10px] font-bold text-red-500 uppercase mb-4 tracking-widest leading-none">Belum Muat Naik ({belumMuatNaik.length}/30)</h4><div className="grid grid-cols-2 gap-3">{belumMuatNaik.map(p => (<div key={p} className="text-[9px] font-bold text-slate-500 bg-slate-50 py-2.5 px-3 rounded-lg border border-slate-100 flex justify-between items-center">{p} <Icons.XCircle className="w-3 h-3 text-red-300" /></div>))}</div></div>
+                  <div className="premium-card p-6 md:p-10 bg-white text-left shadow-lg font-['Plus Jakarta Sans'] font-bold uppercase">
+                     <h3 className="text-sm md:text-base font-bold text-slate-900 tracking-widest mb-6 md:mb-8 border-b pb-4 flex items-center gap-3"><Icons.CheckCircle className="text-emerald-500 w-5 h-5 md:w-6 md:h-6"/> Status Penghantaran PPD</h3>
+                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                       <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-emerald-600 uppercase mb-4 tracking-widest leading-none">Sudah Muat Naik ({sudahMuatNaik.length}/30)</h4>
+                          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                             {sudahMuatNaik.map(p => (
+                               <div key={p} className="text-xs font-bold text-slate-700 bg-emerald-50 py-2.5 px-3 rounded-lg border border-emerald-100 flex justify-between items-center whitespace-nowrap overflow-hidden text-ellipsis">
+                                  <span className="truncate">{p.replace('PPD', '')}</span> <Icons.CheckCircle className="w-4 h-4 text-emerald-500 shrink-0" />
+                               </div>
+                             ))}
+                          </div>
+                       </div>
+                       <div>
+                          <h4 className="text-xs sm:text-sm font-bold text-red-500 uppercase mb-4 tracking-widest leading-none">Belum Muat Naik ({belumMuatNaik.length}/30)</h4>
+                          <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                             {belumMuatNaik.map(p => (
+                               <div key={p} className="text-xs font-bold text-slate-500 bg-slate-50 py-2.5 px-3 rounded-lg border border-slate-100 flex justify-between items-center whitespace-nowrap overflow-hidden text-ellipsis">
+                                  <span className="truncate">{p.replace('PPD', '')}</span> <Icons.XCircle className="w-4 h-4 text-red-300 shrink-0" />
+                               </div>
+                             ))}
+                          </div>
+                       </div>
                      </div>
                   </div>
                 </div>
@@ -604,13 +700,28 @@
 
               {activeTab === 'info' && (
                 <div className="max-w-4xl mx-auto animate-fade-in no-print font-['Plus Jakarta Sans'] font-bold uppercase">
-                   <div className="premium-card p-12 space-y-10 text-left">
-                      <div className="flex items-center gap-4 border-b border-slate-100 pb-8"><div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800"><Icons.Info className="w-6 h-6"/></div><h2 className="text-2xl font-extrabold text-slate-900 tracking-tighter uppercase leading-none">Maklumat Pengurusan Sistem</h2></div>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-[11px] leading-relaxed text-slate-600">
-                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">1. Konsolidasi Data</h4><p>Sistem menggabungkan data permohonan dari setiap daerah Sarawak secara unik berasaskan No. MyKid murid bagi menjamin ketepatan statistik.</p></div>
-                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">2. Kawalan Integriti</h4><p>Fungsi pemadaman disediakan secara spesifik bagi setiap PPD melalui Dashboard untuk memudahkan pembetulan data daerah tanpa mengganggu daerah lain.</p></div>
-                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">3. Jantina Mutlak</h4><p>Logik sistem memproses jantina murid secara automatik berpandukan digit ke-12 No. MyKid (Ganjil=Lelaki, Genap=Perempuan) bagi menjamin ketepatan 100%.</p></div>
-                         <div className="space-y-3"><h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs">4. Kohort Umur</h4><p>Sistem secara automatik mengasingkan murid mengikut kumpulan umur berdasarkan tarikh lahir yang diekstrak dari No. MyKid.</p></div>
+                   <div className="premium-card p-6 md:p-12 space-y-8 md:space-y-10 text-left">
+                      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-4 border-b border-slate-100 pb-6 md:pb-8">
+                         <div className="w-12 h-12 md:w-14 md:h-14 bg-slate-100 rounded-xl md:rounded-2xl flex items-center justify-center text-slate-800 shrink-0"><Icons.Info className="w-6 h-6 md:w-7 md:h-7"/></div>
+                         <h2 className="text-xl md:text-2xl font-extrabold text-slate-900 tracking-tight uppercase leading-none">Maklumat Pengurusan Sistem</h2>
+                      </div>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 md:gap-10 text-xs sm:text-sm leading-relaxed text-slate-600">
+                         <div className="space-y-2 md:space-y-3">
+                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs md:text-sm">1. Konsolidasi Data</h4>
+                            <p className="font-medium text-slate-500 normal-case">Sistem menggabungkan data permohonan dari setiap daerah Sarawak secara unik berasaskan No. MyKid murid bagi menjamin ketepatan statistik.</p>
+                         </div>
+                         <div className="space-y-2 md:space-y-3">
+                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs md:text-sm">2. Kawalan Integriti</h4>
+                            <p className="font-medium text-slate-500 normal-case">Fungsi pemadaman disediakan secara spesifik bagi setiap PPD melalui Dashboard untuk memudahkan pembetulan data daerah tanpa mengganggu daerah lain.</p>
+                         </div>
+                         <div className="space-y-2 md:space-y-3">
+                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs md:text-sm">3. Jantina Mutlak</h4>
+                            <p className="font-medium text-slate-500 normal-case">Logik sistem memproses jantina murid secara automatik berpandukan digit ke-12 No. MyKid (Ganjil=Lelaki, Genap=Perempuan) bagi menjamin ketepatan 100%.</p>
+                         </div>
+                         <div className="space-y-2 md:space-y-3">
+                            <h4 className="text-slate-900 font-bold tracking-widest uppercase text-xs md:text-sm">4. Kohort Umur</h4>
+                            <p className="font-medium text-slate-500 normal-case">Sistem secara automatik mengasingkan murid mengikut kumpulan umur berdasarkan tarikh lahir yang diekstrak dari No. MyKid.</p>
+                         </div>
                       </div>
                    </div>
                 </div>
