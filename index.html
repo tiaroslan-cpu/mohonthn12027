@@ -223,7 +223,14 @@
                   const combinedRows = [];
                   snapshot.forEach(doc => {
                     const docData = doc.data();
-                    if (docData && docData.rows) combinedRows.push(...docData.rows);
+                    if (docData) {
+                      // Sokong kedua-dua format: legasi (rows array) dan individu (single object)
+                      if (docData.rows && Array.isArray(docData.rows)) {
+                        combinedRows.push(...docData.rows);
+                      } else {
+                        combinedRows.push(docData);
+                      }
+                    }
                   });
                   setData(combinedRows);
                   setLoading(false);
@@ -280,8 +287,6 @@
 
         const stats = useMemo(() => {
           const pool = allDataUnique;
-          
-          // Struktur data lalai untuk mengelakkan ralat 'undefined'
           const defaultCohort = {
             c7_m: 0, c7_p: 0, c7_total: 0,
             c6_m: 0, c6_p: 0, c6_total: 0,
@@ -289,11 +294,7 @@
           };
 
           if(!pool.length) return { 
-            total: 0, 
-            cohortGenderData: [], 
-            genderData: [], 
-            ppdList: [],
-            cohortValues: defaultCohort
+            total: 0, cohortGenderData: [], genderData: [], ppdList: [], cohortValues: defaultCohort
           };
 
           const c7 = pool.filter(d => d.kohort === COHORT_NAMES.C7);
@@ -312,10 +313,8 @@
             if (!acc[p]) acc[p] = { name: p, total: 0, c7_l: 0, c7_p: 0, c6_l: 0, c6_p: 0 };
             acc[p].total++;
             const isM = r.jantina === 'Lelaki';
-            
             if (r.kohort === COHORT_NAMES.C7) { if (isM) acc[p].c7_l++; else acc[p].c7_p++; }
             else if (r.kohort === COHORT_NAMES.C6) { if (isM) acc[p].c6_l++; else acc[p].c6_p++; }
-            
             return acc;
           }, {});
 
@@ -345,18 +344,16 @@
           setLoading(true);
           try {
             const rawRows = isExcel ? input : parseDataInputCSV(input);
-            const updatedData = [...data];
-            const icMap = new Map();
-            updatedData.forEach((d, idx) => {
-                const icClean = String(d.icFormatted || d.icClean || d.icRaw).replace(/[^0-9]/g,'');
-                if (icClean) icMap.set(icClean, idx);
-            });
-
+            const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
+            
+            const existingIcs = new Set(allDataUnique.map(d => d.icClean));
             let added = 0;
+            let rowsToUpload = [];
+
             rawRows.forEach((r) => {
                 let icRaw, name, ppd;
                 for(let key in r) {
-                    const k = key.toUpperCase().replace(/[^A-Z0-9]/g,''); 
+                    const k = key.toUpperCase().replace(/[^A-Z]/g,''); 
                     if (!icRaw && (k.includes('IC') || k.includes('MYKID') || k.includes('PENGENALAN'))) icRaw = r[key];
                     if (!name && (k.includes('NAMAMURID') || k === 'NAMA')) name = r[key];
                     if (!ppd && (k.includes('PPD') || k.includes('DAERAH'))) ppd = r[key];
@@ -364,7 +361,7 @@
                 
                 if (!icRaw) return;
                 const icClean = String(icRaw).replace(/[^0-9]/g, '');
-                if (icClean.length < 6) return;
+                if (icClean.length < 6 || existingIcs.has(icClean)) return;
 
                 const yy = parseInt(icClean.substring(0, 2), 10), mm = parseInt(icClean.substring(2, 4), 10), dd = parseInt(icClean.substring(4, 6), 10);
                 const fullYear = yy >= 0 && yy <= 30 ? 2000 + yy : 1900 + yy;
@@ -377,26 +374,33 @@
                 const gen = parseInt(icClean.substring(11, 12), 10) % 2 !== 0 ? 'Lelaki' : 'Perempuan';
                 let ppdName = (manualPPD || ppd || 'SARAWAK').toUpperCase().replace(/^PPD\s+/i, '').trim();
 
-                if (!icMap.has(icClean)) {
-                    updatedData.push({
-                      nama: name || 'TANPA NAMA',
-                      ppd: ppdName,
-                      icFormatted: icRaw,
-                      icClean: icClean,
-                      jantina: gen,
-                      kohort: coh,
-                      tarikhLahir: `${dd}/${mm}/${fullYear}`
-                    });
-                    icMap.set(icClean, updatedData.length - 1);
-                    added++;
-                }
+                rowsToUpload.push({
+                    nama: name || 'TANPA NAMA',
+                    ppd: ppdName,
+                    icFormatted: icRaw,
+                    icClean: icClean,
+                    jantina: gen,
+                    kohort: coh,
+                    tarikhLahir: `${dd}/${mm}/${fullYear}`
+                });
+                existingIcs.add(icClean);
+                added++;
             });
 
             if (added > 0) {
-                await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc('master').set({ rows: updatedData });
-                setToast({ message: `Berjaya! ${added} rekod baharu ditambah.`, type: 'success' });
+                // MUAT NAIK SECARA BATCH (Had 500 per batch Firestore)
+                for (let i = 0; i < rowsToUpload.length; i += 500) {
+                    const batch = db.batch();
+                    const chunk = rowsToUpload.slice(i, i + 500);
+                    chunk.forEach(row => {
+                        const docRef = colRef.doc(row.icClean); // Guna IC sebagai ID untuk elak duplikasi
+                        batch.set(docRef, row);
+                    });
+                    await batch.commit();
+                }
+                setToast({ message: `Berjaya menambah ${added} rekod baharu.`, type: 'success' });
             } else {
-                setToast({ message: "Tiada penambahan dikesan.", type: 'error' });
+                setToast({ message: "Tiada rekod baharu yang dikesan (semua pendua).", type: 'error' });
             }
           } catch(e) { console.error(e); setToast({ message: "Ralat memproses fail.", type: 'error' }); }
           setLoading(false);
@@ -432,20 +436,32 @@
         };
 
         const handleResetData = async () => {
-          if(window.confirm('Adakah anda pasti mahu memadam semua data dari awan?')) { 
+          if(window.confirm('Adakah anda pasti mahu memadam semua data dari awan secara kekal?')) { 
             try {
               setLoading(true);
-              await db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan').doc('master').delete();
+              const colRef = db.collection('artifacts').doc(appId).collection('public').doc('data').collection('permohonan');
+              const snapshot = await colRef.get();
+              
+              const chunks = [];
+              const docs = snapshot.docs;
+              for (let i = 0; i < docs.length; i += 500) {
+                chunks.push(docs.slice(i, i + 500));
+              }
+
+              for (const chunk of chunks) {
+                const batch = db.batch();
+                chunk.forEach(doc => batch.delete(doc.ref));
+                await batch.commit();
+              }
+
               setData([]);
               setToast({ message: "Semua data berjaya dipadam.", type: 'success' });
-            } catch (e) { console.error(e); }
+            } catch (e) { console.error(e); setToast({ message: "Ralat memadam data.", type: 'error' }); }
             finally { setLoading(false); }
           }
         };
 
-        const handlePrint = () => {
-          if (window.self !== window.top) setShowPrintModal(true); else window.print();
-        };
+        const handlePrint = () => { if (window.self !== window.top) setShowPrintModal(true); else window.print(); };
 
         const parseDataInputCSV = (text) => {
             const lines = text.split(/\r\n|\n/);
