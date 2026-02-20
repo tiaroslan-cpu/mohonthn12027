@@ -593,15 +593,17 @@
                           <tr>
                             <th rowSpan="2" className="border-r border-b px-4 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Bil</th>
                             <th rowSpan="2" className="text-left border-r border-b px-6 py-4 text-xs font-bold text-slate-500 uppercase tracking-wider w-1/4">Nama PPD</th>
-                            <th rowSpan="2" className="bg-slate-100/50 border-r border-b px-6 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider">Jumlah</th>
-                            <th colSpan="2" className="bg-orange-50/50 border-b border-r px-6 py-3 text-xs font-bold text-slate-600 uppercase tracking-wider">Kohort 7 Thn (6+)</th>
-                            <th colSpan="2" className="bg-blue-50/50 border-b px-6 py-3 text-xs font-bold text-slate-600 uppercase tracking-wider">Kohort 6 Thn (5+)</th>
+                            <th rowSpan="2" className="bg-slate-100/50 border-r border-b px-6 py-4 text-xs font-bold text-slate-800 uppercase tracking-wider">Jumlah Keseluruhan</th>
+                            <th colSpan="3" className="bg-orange-50/50 border-b border-r px-6 py-3 text-xs font-bold text-slate-600 uppercase tracking-wider">Kohort 7 Thn (6+)</th>
+                            <th colSpan="3" className="bg-blue-50/50 border-b px-6 py-3 text-xs font-bold text-slate-600 uppercase tracking-wider">Kohort 6 Thn (5+)</th>
                           </tr>
                           <tr className="bg-slate-50/30 text-xs font-bold uppercase text-slate-500">
                              <th className="border-r border-b py-3 px-4">Lelaki</th>
                              <th className="border-r border-b py-3 px-4">Perempuan</th>
+                             <th className="border-r border-b py-3 px-4 text-orange-700 bg-orange-50/50">Jum</th>
                              <th className="border-r border-b py-3 px-4">Lelaki</th>
-                             <th className="border-b py-3 px-4">Perempuan</th>
+                             <th className="border-r border-b py-3 px-4">Perempuan</th>
+                             <th className="border-b py-3 px-4 text-blue-700 bg-blue-50/50">Jum</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-100">
@@ -612,13 +614,15 @@
                               <td className="bg-slate-50/30 text-slate-900 border-r font-black text-base py-3.5">{p.total}</td>
                               <td className="text-blue-600 border-r text-sm font-semibold">{p.c7_l}</td>
                               <td className="text-pink-600 border-r text-sm font-semibold">{p.c7_p}</td>
+                              <td className="text-orange-700 border-r text-sm font-black bg-orange-50/30">{p.c7_l + p.c7_p}</td>
                               <td className="text-blue-600 border-r text-sm font-semibold">{p.c6_l}</td>
-                              <td className="text-pink-600 text-sm font-semibold">{p.c6_p}</td>
+                              <td className="text-pink-600 border-r text-sm font-semibold">{p.c6_p}</td>
+                              <td className="text-blue-700 text-sm font-black bg-blue-50/30">{p.c6_l + p.c6_p}</td>
                             </tr>
                           ))}
                           {filteredPPDList.length === 0 && (
                             <tr>
-                               <td colSpan="7" className="py-6 text-sm font-bold text-slate-400">Tiada rekod padanan untuk "{searchQuery}"</td>
+                               <td colSpan="9" className="py-6 text-sm font-bold text-slate-400">Tiada rekod padanan untuk "{searchQuery}"</td>
                             </tr>
                           )}
                         </tbody>
