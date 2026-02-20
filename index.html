@@ -305,7 +305,8 @@
             m: arr.filter(d => d.jantina === 'Lelaki').length,
             f: arr.filter(d => d.jantina === 'Perempuan').length,
             sk: arr.filter(d => d.jenisSekolah === 'SK').length,
-            sjkc: arr.filter(d => d.jenisSekolah === 'SJK(C)').length
+            sjkc: arr.filter(d => d.jenisSekolah === 'SJK(C)').length,
+            total: arr.length
           });
 
           const c7s = getC(c7), c6s = getC(c6);
@@ -324,10 +325,9 @@
             return acc;
           }, {});
 
-          // Data untuk carta kohort (termasuk divider visual)
           const cohortGenderData = [
-            { name: '7 Tahun (6+)', Lelaki: c7s.m, Perempuan: c7s.f, divider: Math.max(c7s.m, c7s.f, c7s.sk, c7s.sjkc), SK: c7s.sk, 'SJK(C)': c7s.sjkc },
-            { name: '6 Tahun (5+)', Lelaki: c6s.m, Perempuan: c6s.f, divider: Math.max(c6s.m, c6s.f, c6s.sk, c6s.sjkc), SK: c6s.sk, 'SJK(C)': c6s.sjkc }
+            { name: COHORT_NAMES.C7, Lelaki: c7s.m, Perempuan: c7s.f, SK: c7s.sk, SJKC: c7s.sjkc, Jumlah: c7s.total },
+            { name: COHORT_NAMES.C6, Lelaki: c6s.m, Perempuan: c6s.f, SK: c6s.sk, SJKC: c6s.sjkc, Jumlah: c6s.total }
           ];
 
           return {
@@ -468,40 +468,43 @@
 
               {activeTab === 'dashboard' && (
                 <div className="space-y-10 animate-fade-in">
-                  <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-4 gap-8">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                     <StatCard title="Jumlah Permohonan" value={stats.total.toLocaleString()} icon={Icons.FileText} colorClass="border-l-slate-800" />
                     
+                    {/* JADUAL ANALISIS KOHORT - MENGGANTIKAN CARTA */}
                     <div className="premium-card p-6 flex flex-col h-full col-span-1 lg:col-span-2">
                        <div className="flex justify-between items-center mb-6">
-                          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Analisis Kohort (Jantina vs Jenis Sekolah)</p>
+                          <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Analisis Kohort (Jantina & Jenis Sekolah)</p>
                           <div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.Users /></div>
                        </div>
-                       <div className="h-64 mt-2">
-                         <Chart.ResponsiveContainer width="100%" height="100%">
-                            <Chart.BarChart data={stats.cohortGenderData} margin={{top: 35, right: 10, left: 10, bottom: 0}} barGap={12}>
-                               <Chart.CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0"/>
-                               <Chart.XAxis dataKey="name" tick={{fontSize: 11, fontWeight: 800, fill: '#64748b'}} axisLine={false} tickLine={false} />
-                               <Chart.Tooltip contentStyle={{borderRadius: '12px', border:'none', boxShadow:'0 4px 10px rgba(0,0,0,0.1)'}} />
-                               <Chart.Legend verticalAlign="top" height={36} wrapperStyle={{fontSize: '11px', fontWeight: 'bold'}} />
-                               
-                               <Chart.Bar dataKey="Lelaki" fill={THEME.male} radius={[4,4,0,0]} barSize={14}>
-                                  <Chart.LabelList dataKey="Lelaki" position="top" fontSize={10} fontWeight={800} fill={THEME.male} />
-                               </Chart.Bar>
-                               <Chart.Bar dataKey="Perempuan" fill={THEME.female} radius={[4,4,0,0]} barSize={14}>
-                                  <Chart.LabelList dataKey="Perempuan" position="top" fontSize={10} fontWeight={800} fill={THEME.female} />
-                               </Chart.Bar>
-                               
-                               {/* GARISAN PEMISAH VISUAL & JARAK */}
-                               <Chart.Bar dataKey="divider" fill="#e2e8f0" barSize={1} legendType="none" tooltipType="none" opacity={0.5} />
-                               
-                               <Chart.Bar dataKey="SK" fill={THEME.sk} radius={[4,4,0,0]} barSize={14}>
-                                  <Chart.LabelList dataKey="SK" position="top" fontSize={10} fontWeight={800} fill={THEME.sk} />
-                               </Chart.Bar>
-                               <Chart.Bar dataKey="SJK(C)" fill={THEME.sjkc} radius={[4,4,0,0]} barSize={14}>
-                                  <Chart.LabelList dataKey="SJK(C)" position="top" fontSize={10} fontWeight={800} fill={THEME.sjkc} />
-                               </Chart.Bar>
-                            </Chart.BarChart>
-                         </Chart.ResponsiveContainer>
+                       <div className="overflow-hidden rounded-xl border border-slate-100">
+                          <table className="min-w-full text-center text-xs font-bold uppercase tracking-tight">
+                             <thead className="bg-slate-50 text-slate-400 border-b">
+                                <tr>
+                                   <th className="px-4 py-3 border-r">Kohort Umur</th>
+                                   <th className="px-4 py-3 border-r text-blue-600 bg-blue-50/20">Lelaki</th>
+                                   <th className="px-4 py-3 border-r text-pink-600 bg-pink-50/20">Perempuan</th>
+                                   <th className="px-4 py-3 border-r text-indigo-700 bg-indigo-50/20">SK</th>
+                                   <th className="px-4 py-3 border-r text-red-700 bg-red-50/20">SJK(C)</th>
+                                   <th className="px-4 py-3 bg-slate-100 text-slate-900">Jumlah</th>
+                                </tr>
+                             </thead>
+                             <tbody className="divide-y divide-slate-50">
+                                {stats.cohortGenderData.map(c => (
+                                   <tr key={c.name} className="hover:bg-slate-50/50 transition-colors">
+                                      <td className="px-4 py-4 text-slate-800 border-r">{c.name}</td>
+                                      <td className="px-4 py-4 text-blue-600 border-r">{c.Lelaki}</td>
+                                      <td className="px-4 py-4 text-pink-600 border-r">{c.Perempuan}</td>
+                                      <td className="px-4 py-4 text-indigo-700 border-r">{c.SK}</td>
+                                      <td className="px-4 py-4 text-red-700 border-r">{c.SJKC}</td>
+                                      <td className="px-4 py-4 bg-slate-50/30 text-slate-950 font-black">{c.Jumlah}</td>
+                                   </tr>
+                                ))}
+                             </tbody>
+                          </table>
+                       </div>
+                       <div className="mt-4 flex gap-4 text-[10px] font-bold text-slate-400 italic">
+                          <span>* Pecahan Jantina dan Sekolah adalah berdasarkan data unik No. MyKid.</span>
                        </div>
                     </div>
 
@@ -510,9 +513,9 @@
                           <p className="text-sm font-bold text-slate-500 uppercase tracking-wider">Jantina Keseluruhan</p>
                           <div className="p-2.5 rounded-xl bg-slate-50 text-slate-700"><Icons.CheckCircle /></div>
                        </div>
-                       <div className="h-64 mt-2">
+                       <div className="h-40">
                          <Chart.ResponsiveContainer width="100%" height="100%">
-                            <Chart.BarChart data={stats.genderData} margin={{top: 35, right: 10, left: 10, bottom: 0}}>
+                            <Chart.BarChart data={stats.genderData} margin={{top: 25, right: 10, left: 10, bottom: 0}}>
                                <Chart.CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0"/>
                                <Chart.XAxis dataKey="name" tick={{fontSize: 11, fontWeight: 600, fill: '#64748b'}} axisLine={false} tickLine={false} />
                                <Chart.Bar dataKey="value" radius={[4,4,0,0]} barSize={32}>
@@ -613,7 +616,7 @@
                       <div className="flex items-center gap-4 border-b border-slate-100 pb-8"><div className="w-14 h-14 bg-slate-100 rounded-2xl flex items-center justify-center text-slate-800"><Icons.Info className="w-6 h-6"/></div><h2 className="text-2xl font-extrabold text-slate-900 tracking-tighter uppercase leading-none">Info & Integriti Sistem</h2></div>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-10 text-[11px] leading-relaxed text-slate-600 text-left font-bold">
                          <div className="space-y-3"><h4 className="text-slate-900 tracking-widest uppercase">1. Konsolidasi Data Sarawak</h4><p>Sistem menggabungkan data permohonan dari setiap daerah Sarawak secara unik berasaskan No. MyKid murid. Ini menjamin statistik permohonan melebihi 6,000 rekod adalah tepat.</p></div>
-                         <div className="space-y-3"><h4 className="text-slate-900 tracking-widest uppercase">2. Analisis Kohort & Jenis Sekolah</h4><p>Carta kohort kini memisahkan kumpulan Jantina dan kumpulan Jenis Sekolah (SK/SJKC) menggunakan penunjuk visual garisan pemisah bagi memudahkan analisis pecahan murid.</p></div>
+                         <div className="space-y-3"><h4 className="text-slate-900 tracking-widest uppercase">2. Analisis Kohort & Jenis Sekolah</h4><p>Jadual kohort memaparkan pecahan Jantina dan Jenis Sekolah (SK/SJKC) bagi setiap kumpulan umur permohonan murid Tahun 1 sesi 2027.</p></div>
                          <div className="space-y-3"><h4 className="text-slate-900 tracking-widest uppercase">3. Integriti Sarawak</h4><p>Status penghantaran dipaparkan bagi membolehkan pemantauan daerah yang melengkapkan data permohonan Tahun 1 bagi sesi 2027 secara telus.</p></div>
                          <div className="space-y-3"><h4 className="text-slate-900 tracking-widest uppercase">4. Jantina Mutlak</h4><p>Logik sistem memproses jantina murid secara automatik berpandukan digit ke-12 No. MyKid (Ganjil=Lelaki, Genap=Perempuan) bagi menjamin ketepatan 100%.</p></div>
                       </div>
